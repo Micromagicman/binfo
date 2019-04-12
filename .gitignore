@@ -1,2 +1,7 @@
 /.idea/
 /backend/
+/pkg/
+
+/src/github.com/
+
+*.xml

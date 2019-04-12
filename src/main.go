@@ -2,52 +2,39 @@ package main
 
 import (
 	"analyzer"
-	"binary"
-	"fmt"
-	"log"
-	"os"
-	"strconv"
+	"xml"
+)
+
+const (
+	TYPE_EXE = 0
+	TYPE_DLL = 1
+	TYPE_JAR = 2
 )
 
 func main() {
 	//exeFile := analyzer.Exe("C:\\Users\\Admin\\Work\\binfo\\backend\\binutils\\objdump.exe")
+	analyze( ,TYPE_DLL)
 	dllFile := analyzer.Dll("C:\\Users\\Admin\\Work\\binfo\\backend\\binutils\\libiconv-2.dll")
-	fmt.Println(dllFile)
-	createXml(dllFile)
+	//jarFile := analyzer.Jar("C:\\Users\\Admin\\Work\\jars\\drone-java.jar")
+	xml.BuildXml(dllFile, "output_dll.xml")
+	//xml.BuildXml(jarFile, "output_jar.xml")
+	//analyzer.Jar("C:\\Users\\Admin\\Work(\\jars\\drone-java.jar")
 	//fmt.Println(analyzer.Dll("C:\\Users\\Admin\\Work\\binfo\\backend\\binutils\\libiconv-2.dll"))
 }
 
-func createXml(bin *binary.BinaryFile) {
-	file, _ := os.Create("test.xml")
-	doc := etree.NewDocument()
-	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
+func detectAnalyzerType(filename string) {
 
-	root := doc.CreateElement("Binary")
-	filenameElem := root.CreateElement("Filename")
-	filenameElem.CreateText(bin.Filename)
-	architectureElem := root.CreateElement("Architecture")
-	architectureElem.CreateText(bin.Architecture)
-
-	flagsElem := root.CreateElement("Flags")
-	for index, flag := range bin.Flags {
-		flagElem := flagsElem.CreateElement("Flag")
-		flagElem.CreateAttr("id", strconv.Itoa(index))
-		flagElem.CreateText(flag.Name)
-	}
-
-	dependenciesElem := root.CreateElement("Dependencies")
-	for index, dependency := range bin.Dependencies {
-		dependencyElem := dependenciesElem.CreateElement("Dependency")
-		dependencyElem.CreateAttr("id", strconv.Itoa(index))
-		dependencyElem.CreateText(dependency.Name)
-	}
-
-	doc.Indent(4)
-	_, err := doc.WriteTo(file)
-	if err != nil {
-		log.Fatal("Error when create xml")
-	}
 }
 
-
+func analyze(pathToBinary string, binaryType int) {
+	if binaryType == TYPE_EXE {
+		file := analyzer.Exe(pathToBinary)
+		xml.BuildXml(file, "output.xml")
+	} else if binaryType == TYPE_DLL {
+		file := analyzer.Dll(pathToBinary)
+		xml.BuildXml(file, "output.xml")
+	} else if binaryType == TYPE_JAR {
+		// TODO
+	}
+}
 

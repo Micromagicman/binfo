@@ -2,6 +2,8 @@ package analyzer
 
 import (
 	"binary"
+	"fmt"
+	"github.com/gnewton/jargo"
 	"log"
 	"os/exec"
 	"regexp"
@@ -10,15 +12,33 @@ import (
 
 const ANALYZERS_PATH = "C:\\Users\\Admin\\Work\\binfo\\backend"
 
-func Jar(pathToJar string) {
+func Jar(pathToJar string) *binary.JarBinary {
+	jargoResult, err := jargo.GetJarInfo(pathToJar)
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	jar := &binary.JarBinary{}
+	jar.Architecture = ""
+	jar.Filename = pathToJar
+	jar.Dependencies = []binary.Dependency{}
+	jar.Flags = []binary.Flag{}
+	jar.Sections = []binary.Section{}
+	jar.BuildBy = (*jargoResult.Manifest)["Build-By"]
+
+	for index, file := range jargoResult.Files {
+		fmt.Println(index, file)
+	}
+
+	//fmt.Printf("%+v\n", jar)
+	return jar
 }
 
-func Dll(pathToDll string) *binary.BinaryFile {
+func Dll(pathToDll string) *binary.PEBinary {
 	return processWindowsBinary(pathToDll)
 }
 
-func Exe(pathToExe string) *binary.BinaryFile {
+func Exe(pathToExe string) *binary.PEBinary {
 	return processWindowsBinary(pathToExe)
 }
 
@@ -35,8 +55,8 @@ func objdump(binaryFilePath string, args ...string) []byte {
 	return stdoutStderr
 }
 
-func processWindowsBinary(pathToBinary string) *binary.BinaryFile {
-	bin := &binary.BinaryFile{}
+func processWindowsBinary(pathToBinary string) *binary.PEBinary {
+	bin := &binary.PEBinary{}
 	byteDump := objdump(pathToBinary, "a", "f", "x")
 	stringDump := string(byteDump)
 
