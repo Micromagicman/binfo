@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func BuildXml(bin *binary.PEBinary, outputFilename string) {
+func BuildXml(bin binary.Binary, outputFilename string) {
 	file, _ := os.Create(outputFilename)
 	doc := etree.NewDocument()
 	bin.ToXml(doc)

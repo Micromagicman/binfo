@@ -2,21 +2,15 @@ package analyzer
 
 import (
 	"binary"
-	"fmt"
-	"github.com/gnewton/jargo"
 	"log"
 	"os/exec"
 	"regexp"
 	"strings"
 )
 
-const ANALYZERS_PATH = "C:\\Users\\Admin\\Work\\binfo\\backend"
-
 func Jar(pathToJar string) *binary.JarBinary {
-	jargoResult, err := jargo.GetJarInfo(pathToJar)
-	if err != nil {
-		log.Fatal(err)
-	}
+	jargoResult := Jargo(pathToJar)
+	manifest := *jargoResult.Manifest
 
 	jar := &binary.JarBinary{}
 	jar.Architecture = ""
@@ -24,13 +18,14 @@ func Jar(pathToJar string) *binary.JarBinary {
 	jar.Dependencies = []binary.Dependency{}
 	jar.Flags = []binary.Flag{}
 	jar.Sections = []binary.Section{}
-	jar.BuildBy = (*jargoResult.Manifest)["Build-By"]
+	jar.BuiltBy = manifest["Built-By"]
+	jar.BuildJdk = manifest["Build-Jdk"]
+	jar.CreatedBy = manifest["Created-By"]
+	jar.ManifestVersion = manifest["Manifest-Version"]
+	jar.MainClass = manifest["Main-Class"]
+	jar.ClassPath = strings.Split(manifest["Class-Path"], " ")
+	jar.JarAnalyzerTree = JarAnalyzer(pathToJar)
 
-	for index, file := range jargoResult.Files {
-		fmt.Println(index, file)
-	}
-
-	//fmt.Printf("%+v\n", jar)
 	return jar
 }
 

@@ -3,5 +3,6 @@
 /pkg/
 
 /src/github.com/
+/src/xml/tags.go
 
 *.xml

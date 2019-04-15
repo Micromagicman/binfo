@@ -6,7 +6,7 @@ import (
 )
 
 type Binary interface {
-	ToXml(d *etree.Document)
+	ToXml(d *etree.Document) *etree.Element
 }
 
 type Section struct {
@@ -37,8 +37,9 @@ type JarBinary struct {
 	ClassPath []string
 	BuildJdk string
 	MainClass string
-	BuildBy string
+	BuiltBy string
 	CreatedBy string
+	JarAnalyzerTree *etree.Element
 }
 
 func (bin *PEBinary) GetArchitecture() string {
@@ -55,16 +56,44 @@ func (bin *PEBinary) ToXml(doc *etree.Document) *etree.Element {
 	filenameElem := root.CreateElement("Filename")
 	filenameElem.CreateText(bin.Filename)
 
+	bin.buildArchitecture(root)
 	bin.buildFlags(root)
 	bin.buildDependencies(root)
 
 	return root
 }
 
-func (jar *JarBinary) ToXml(doc *etree.Document) *etree.Document {
+func (jar *JarBinary) ToXml(doc *etree.Document) *etree.Element {
 	root := jar.PEBinary.ToXml(doc)
-	root.CreateElement("Jar")
-	return nil
+
+	manifestVersionElement := root.CreateElement("ManifestVersion")
+	manifestVersionElement.CreateText(jar.ManifestVersion)
+
+	createdByElement := root.CreateElement("CreatedBy")
+	createdByElement.CreateText(jar.CreatedBy)
+
+	builtByElement := root.CreateElement("BuildBy")
+	builtByElement.CreateText(jar.BuiltBy)
+
+	buildJdkElement := root.CreateElement("BuildJdk")
+	buildJdkElement.CreateText(jar.BuildJdk)
+
+	mainClassElement := root.CreateElement("MainClass")
+	mainClassElement.CreateText(jar.MainClass)
+
+	classPathsElement := root.CreateElement("ClassPaths")
+	for index, cp := range jar.ClassPath {
+		if cp == "" {
+			continue
+		}
+
+		classPathElement := classPathsElement.CreateElement("ClassPath")
+		classPathElement.CreateAttr("id", strconv.Itoa(index))
+		classPathElement.CreateText(cp)
+	}
+
+	root.AddChild(jar.JarAnalyzerTree)
+	return root
 }
 
 func (bin *PEBinary) buildArchitecture(root *etree.Element) {

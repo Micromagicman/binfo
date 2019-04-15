@@ -2,6 +2,7 @@ package main
 
 import (
 	"analyzer"
+	"binary"
 	"xml"
 )
 
@@ -12,29 +13,22 @@ const (
 )
 
 func main() {
-	//exeFile := analyzer.Exe("C:\\Users\\Admin\\Work\\binfo\\backend\\binutils\\objdump.exe")
-	analyze( ,TYPE_DLL)
-	dllFile := analyzer.Dll("C:\\Users\\Admin\\Work\\binfo\\backend\\binutils\\libiconv-2.dll")
-	//jarFile := analyzer.Jar("C:\\Users\\Admin\\Work\\jars\\drone-java.jar")
-	xml.BuildXml(dllFile, "output_dll.xml")
-	//xml.BuildXml(jarFile, "output_jar.xml")
-	//analyzer.Jar("C:\\Users\\Admin\\Work(\\jars\\drone-java.jar")
-	//fmt.Println(analyzer.Dll("C:\\Users\\Admin\\Work\\binfo\\backend\\binutils\\libiconv-2.dll"))
-}
-
-func detectAnalyzerType(filename string) {
-
+	analyzer.CreateTemplateDirectory()
+	analyze("C:\\Users\\Admin\\Work\\jars\\drone-java.jar", TYPE_JAR)
 }
 
 func analyze(pathToBinary string, binaryType int) {
+	var file binary.Binary
 	if binaryType == TYPE_EXE {
-		file := analyzer.Exe(pathToBinary)
-		xml.BuildXml(file, "output.xml")
+		file = analyzer.Exe(pathToBinary)
 	} else if binaryType == TYPE_DLL {
-		file := analyzer.Dll(pathToBinary)
-		xml.BuildXml(file, "output.xml")
+		file = analyzer.Dll(pathToBinary)
 	} else if binaryType == TYPE_JAR {
-		// TODO
+		file = analyzer.Jar(pathToBinary)
+	}
+
+	if file != nil {
+		xml.BuildXml(file, "output.xml")
 	}
 }
 
