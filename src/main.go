@@ -2,33 +2,43 @@ package main
 
 import (
 	"analyzer"
-	"binary"
+	"log"
+	"os"
+	"path/filepath"
+	"strconv"
 	"xml"
 )
 
-const (
-	TYPE_EXE = 0
-	TYPE_DLL = 1
-	TYPE_JAR = 2
-)
-
 func main() {
+	arguments := os.Args[1:]
+	if len(arguments) == 0 {
+		log.Fatal("First argument must be a path to binary file")
+		return
+	}
+
 	analyzer.CreateTemplateDirectory()
-	analyze("C:\\Users\\Admin\\Work\\jars\\drone-java.jar", TYPE_JAR)
-}
+	for index, path := range arguments {
+		binaryPath := path
+		binaryType := detectBinaryType(binaryPath)
+		if binaryType == analyzer.TYPE_UNKNOWN {
+			// TODO - попытка проанализировать файл без расширения
+			log.Fatal("Unknown binary type for file " + binaryPath)
+		}
 
-func analyze(pathToBinary string, binaryType int) {
-	var file binary.Binary
-	if binaryType == TYPE_EXE {
-		file = analyzer.Exe(pathToBinary)
-	} else if binaryType == TYPE_DLL {
-		file = analyzer.Dll(pathToBinary)
-	} else if binaryType == TYPE_JAR {
-		file = analyzer.Jar(pathToBinary)
+		bin := analyzer.Analyze(binaryPath, binaryType)
+		if bin != nil {
+			xml.BuildXml(bin, strconv.Itoa(index) + ".xml")
+		}
 	}
 
-	if file != nil {
-		xml.BuildXml(file, "output.xml")
-	}
 }
 
+func detectBinaryType(binaryPath string) int {
+	extension := filepath.Ext(binaryPath)
+	switch extension {
+		case ".dll": return analyzer.TYPE_DLL
+		case ".jar": return analyzer.TYPE_JAR
+		case ".exe": return analyzer.TYPE_EXE
+	}
+	return analyzer.TYPE_UNKNOWN
+}

@@ -2,15 +2,35 @@ package analyzer
 
 import (
 	"binary"
-	"log"
-	"os/exec"
+	"fmt"
 	"regexp"
 	"strings"
 )
 
-func Jar(pathToJar string) *binary.JarBinary {
+const (
+	TYPE_UNKNOWN = -1
+	TYPE_EXE = 0
+	TYPE_DLL = 1
+	TYPE_JAR = 2
+)
+
+func Analyze(pathToBinary string, binaryType int) binary.Binary {
+	var file binary.Binary
+	if binaryType == TYPE_EXE || binaryType == TYPE_DLL {
+		file = processWindowsBinary(pathToBinary)
+	} else if binaryType == TYPE_JAR {
+		file = jar(pathToBinary)
+	}
+
+	return file
+}
+
+
+func jar(pathToJar string) *binary.JarBinary {
 	jargoResult := Jargo(pathToJar)
 	manifest := *jargoResult.Manifest
+
+	fmt.Println(manifest)
 
 	jar := &binary.JarBinary{}
 	jar.Architecture = ""
@@ -29,25 +49,10 @@ func Jar(pathToJar string) *binary.JarBinary {
 	return jar
 }
 
-func Dll(pathToDll string) *binary.PEBinary {
-	return processWindowsBinary(pathToDll)
-}
-
-func Exe(pathToExe string) *binary.PEBinary {
-	return processWindowsBinary(pathToExe)
-}
-
 func objdump(binaryFilePath string, args ...string) []byte {
 	flagsString := "-" + strings.Join(args, "")
-	command := createAnalyzerRunCommand("\\binutils\\objdump.exe " + flagsString + " " + binaryFilePath)
-	cmd := exec.Command("cmd", "/C", command)
-	stdoutStderr, err := cmd.CombinedOutput()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return stdoutStderr
+	stdOut := Execute("call " + ANALYZERS_PATH + "\\binutils\\objdump.exe " + binaryFilePath + " " + flagsString)
+	return stdOut
 }
 
 func processWindowsBinary(pathToBinary string) *binary.PEBinary {
@@ -63,9 +68,6 @@ func processWindowsBinary(pathToBinary string) *binary.PEBinary {
 	return bin
 }
 
-func createAnalyzerRunCommand(analyzer string) string {
-	return "call " + ANALYZERS_PATH + analyzer
-}
 
 func getDllDependencies(dump string) []binary.Dependency {
 	regex, _ := regexp.Compile("DLL Name: (.+?\\.dll)")
