@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"log"
 	"os"
 	"os/exec"
 )
@@ -22,7 +21,7 @@ func ExecuteIn(command string, workingDir string) []byte {
 	stdoutStderr, err := cmd.CombinedOutput()
 
 	if err != nil {
-		log.Fatal(err)
+		return []byte{}
 	}
 
 	return stdoutStderr
