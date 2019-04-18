@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/beevik/etree"
 	"strconv"
+	"time"
 )
 
 func BuildNodeWithText(nodeName string, nodeContent string) *etree.Element {
@@ -29,4 +30,8 @@ func Uint32ToString(intValue uint32) string {
 
 func IntToString(intValue int) string {
 	return strconv.Itoa(intValue)
+}
+
+func TimestampToTime(timestamp int64) time.Time {
+	return time.Unix(timestamp, 0)
 }

@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"fmt"
 	"log"
 	"os/exec"
 	"runtime"
@@ -19,6 +20,7 @@ func (e *Executor) Execute(command string) []byte {
 }
 
 func (e *Executor) ExecuteIn(command string, workingDir string) []byte {
+	fmt.Println(command)
 	cmd := exec.Command(command)
 	if runtime.GOOS == "windows" {
 		cmd = exec.Command("cmd", "/C", command)
@@ -41,6 +43,10 @@ func (e *Executor) ObjDumpCommand(binaryFilePath string, flags string) string {
 
 func (e *Executor) PEDumperCommand(binaryFilePath string) string {
 	return e.RunningCommands["pedumper"] + " " + binaryFilePath
+}
+
+func (e *Executor) ELFReaderCommand(binaryFilePath string) string {
+	return e.RunningCommands["elfreader"] + " " + binaryFilePath
 }
 
 func ExecutorFactory() *Executor {
@@ -66,9 +72,10 @@ func createWindowsExecutor() *Executor {
 	winExec.TemplateDirectory = "C:\\Users\\Admin\\Work\\temp"
 	winExec.Sep = "\\"
 	winExec.RunningCommands = map[string]string {
-		"objdump": "call " + winExec.AnalyzersPath + "\\binutils\\objdump.exe",
+		"objdump": "call " + winExec.AnalyzersPath + "\\objdump.exe",
 		"pedumper": "call " + winExec.AnalyzersPath + "\\pedumper.exe",
 		"jaranalyzer": "call " + winExec.AnalyzersPath + "\\jaranalyzer\\runxmlsummary.bat",
+		"elfreader": "call " + winExec.AnalyzersPath + "\\elfreader.exe",
 	}
 	return winExec
 }

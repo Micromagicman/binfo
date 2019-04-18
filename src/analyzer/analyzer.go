@@ -2,13 +2,10 @@ package analyzer
 
 import (
 	"binary"
-	"fmt"
 	"github.com/mewrev/pe"
-	"log"
 	"os"
-	"strconv"
 	"strings"
-	"time"
+	"util"
 )
 
 const (
@@ -21,7 +18,14 @@ const (
 	TYPE_DRV = 5
 	TYPE_CPL = 6
 	TYPE_EFI = 7
-	TYPE_JAR = 10
+	TYPE_LIB = 8
+	TYPE_SO = 10
+	TYPE_AXF = 11
+	TYPE_BIN = 12
+	TYPE_ELF = 13
+	TYPE_O = 14
+	TYPE_PRX = 15
+	TYPE_JAR = 20
 )
 
 type Analyzer struct {
@@ -34,15 +38,22 @@ func CreateAnalyzer() *Analyzer {
 	return analyzer
 }
 
-func (a *Analyzer) Analyze(pathToBinary string, binaryType int) binary.Binary {
+func (a *Analyzer) Analyze(pathToBinary string, binaryType int) (binary.Binary, error) {
 	var file binary.Binary
+	var err error
 	if isPortableExecutable(binaryType) {
-		file = a.ProcessWindowsBinary(pathToBinary)
+		file, err = a.ProcessWindowsBinary(pathToBinary)
+	} else if isElf(binaryType) {
+		file, err = a.ProcessLinuxBinary(pathToBinary)
 	} else if binaryType == TYPE_JAR {
-		file = a.Jar(pathToBinary)
+		file, err = a.Jar(pathToBinary)
 	}
 
-	return file
+	if err != nil {
+		return nil, err
+	}
+
+	return file, nil
 }
 
 func (a *Analyzer) CreateTemplateDirectory() {
@@ -55,12 +66,18 @@ func (a *Analyzer) CreateTemplateDirectory() {
 	}
 }
 
-func (a *Analyzer) Jar(pathToJar string) *binary.JarBinary {
+func (a *Analyzer) Jar(pathToJar string) (*binary.JarBinary, error) {
+	fileStat, fileStatError := fileStat(pathToJar)
+	if fileStatError != nil {
+		return nil, fileStatError
+	}
+
 	jargoResult := Jargo(pathToJar)
 	manifest := *jargoResult.Manifest
 
 	jar := new(binary.JarBinary)
 	jar.Architecture = ""
+	jar.Size = fileStat.Size()
 	jar.Filename = pathToJar
 	jar.Dependencies = []binary.Dependency{}
 	jar.Flags = []binary.Flag{}
@@ -70,20 +87,19 @@ func (a *Analyzer) Jar(pathToJar string) *binary.JarBinary {
 	jar.CreatedBy = manifest["Created-By"]
 	jar.ManifestVersion = manifest["Manifest-Version"]
 	jar.MainClass = manifest["Main-Class"]
-	fmt.Println(manifest["Class-Path"])
 	jar.ClassPath = strings.Split(manifest["Class-Path"], " ")
 	jar.JarAnalyzerTree = a.JarAnalyzer(pathToJar)
 
-	return jar
+	return jar, nil
 }
 
-func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) *binary.PEBinary {
+func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*binary.PEBinary, error) {
 	bin := new(binary.PEBinary)
-	objdump := a.ObjDump(pathToBinary, "a", "f", "x")
-	pedumper := a.PEDumper(pathToBinary)
-	peFile, err := pe.Open(pathToBinary)
+	objDump := a.ObjDump(pathToBinary, "a", "f", "x")
+	peDumper := a.PEDumper(pathToBinary)
+	peFile, peError := pe.Open(pathToBinary)
 
-	if err == nil {
+	if peError == nil {
 		fileHeader, _ := peFile.FileHeader()
 		bin.SectionNumber = fileHeader.NSection
 		sectionHeaders, _ := peFile.SectHeaders()
@@ -91,85 +107,49 @@ func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) *binary.PEBinary {
 	}
 
 	bin.Filename = pathToBinary
-	bin.Signature = getSignature(pedumper)
-	bin.Size = getSize(pedumper)
-	bin.Timestamp = getTimestamp(pedumper)
-	bin.Time = getTime(bin.Timestamp)
-	bin.Dependencies = getDllDependencies(objdump)
-	bin.Architecture = getArchitecture(objdump)
-	bin.ImportedFunctions = getImportedFunctions(pedumper)
-	//bin.Sections = getSections(objdump)
-	bin.Flags = getFlags(objdump)
+	bin.Signature = peDumper.GetSignature()
+	bin.Size = peDumper.GetSize()
+	bin.Timestamp = peDumper.GetTimestamp()
+	bin.Time = util.TimestampToTime(bin.Timestamp)
+	bin.Dependencies = objDump.GetDependencies()
+	bin.Architecture = objDump.GetArchitecture()
+	bin.ImportedFunctions = peDumper.GetImportedFunctions()
+	bin.Flags = objDump.GetFlags()
 
-	return bin
+	return bin, nil
 }
 
-func getSize(dump *ObjDump) int64 {
-	return getInteger(dump, "File size:\\s+(\\d+?) bytes")
-}
+func (a *Analyzer) ProcessLinuxBinary(pathToBinary string) (*binary.ELFBinary, error) {
+	bin := new(binary.ELFBinary)
+	elfDump := a.ELFReader(pathToBinary)
 
-func getTimestamp(dump *ObjDump) int64 {
-	return getInteger(dump, "Timestamp:\\s+(\\d+)")
-}
+	bin.OperatingSystem = elfDump.GetOperatingSystem()
+	bin.Format = elfDump.GetFormat()
+	bin.Version = elfDump.GetVersion()
+	bin.Endianess = elfDump.GetEndianess()
+	bin.Type = elfDump.GetType()
 
-func getDllDependencies(dump *ObjDump) []binary.Dependency {
-	depMatches := dump.FindAll("DLL Name: (.+?\\.dll)")
-	dependencies := make([]binary.Dependency, len(depMatches))
-
-	for index, element := range depMatches {
-		dependencies[index] = binary.Dependency{Name: element[1]}
-	}
-
-	return dependencies
-}
-
-func getArchitecture(dump *ObjDump) string {
-	return dump.FindAll("architecture: (.+?),")[0][1]
-}
-
-func getFlags(dump *ObjDump) []binary.Flag {
-	flagsMatch := dump.FindAll("flags 0x[0-9a-f]+?:\\s+(([A-Z0-9_]+, )*[A-Z0-9_]+)\\s")
-	flagStrings := strings.Split(flagsMatch[0][1], ", ")
-	flags := make([]binary.Flag, len(flagStrings))
-
-	for index, element := range flagStrings {
-		flags[index] = binary.Flag{Name: element}
-	}
-
-	return flags
-}
-
-func getImportedFunctions(dump *ObjDump) []binary.Function {
-	functionsMatch := dump.FindAll("Function Name \\(Hint\\):\\s+([^\\s]+)")
-	functions := make([]binary.Function, len(functionsMatch))
-
-	for index, element := range functionsMatch {
-		functions[index] = binary.Function{Name: element[1]}
-	}
-
-	return functions
-}
-
-func getSignature(dump *ObjDump) string {
-	signatureMatch := dump.Find("Signature:\\s+([^\\n]+)")
-	return signatureMatch[1]
-}
-
-func getTime(timestamp int64) time.Time {
-	return time.Unix(timestamp, 0)
-}
-
-func getInteger(dump *ObjDump, regex string) int64 {
-	timestampMatch := dump.Find(regex)
-	timestamp, err := strconv.Atoi(timestampMatch[1])
-	if err != nil {
-		log.Fatal("Error convert timestamp to int")
-		return -1
-	}
-
-	return int64(timestamp)
+	return bin, nil
 }
 
 func isPortableExecutable(binaryType int) bool {
-	return binaryType >= TYPE_EXE && binaryType <= TYPE_EFI
+	return binaryType >= TYPE_EXE && binaryType <= TYPE_LIB
+}
+
+func isElf(binaryType int) bool {
+	return binaryType == TYPE_EXE || (binaryType >= TYPE_SO && binaryType <= TYPE_PRX)
+}
+
+func fileStat(path string) (os.FileInfo, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := file.Stat()
+	if err != nil {
+		return nil, err
+	}
+
+	return info, nil
 }

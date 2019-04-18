@@ -12,11 +12,11 @@ const (
 type JarBinary struct {
 	PEBinary
 	ManifestVersion string
-	ClassPath []string
-	BuildJdk string
-	MainClass string
-	BuiltBy string
-	CreatedBy string
+	ClassPath       []string
+	BuildJdk        string
+	MainClass       string
+	BuiltBy         string
+	CreatedBy       string
 	JarAnalyzerTree *etree.Element
 }
 

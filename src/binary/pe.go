@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	EMPTY = "Empty"
-	DEFAULT_VALUE = "Unknown"
+	EMPTY                = "Empty"
+	DEFAULT_VALUE        = "Unknown"
 	DEFAULT_ARCHITECTURE = "Any"
 )
 
@@ -20,7 +20,7 @@ type Binary interface {
 type XmlBuilderCallback func(item interface{}) *etree.Element
 
 type Section struct {
-	Idx int
+	Idx  int
 	Name string
 	Size int
 }
@@ -38,16 +38,16 @@ type Function struct {
 }
 
 type PEBinary struct {
-	Filename string
-	Architecture string
-	Signature string
-	Dependencies []Dependency
-	Size int64
-	Timestamp int64
-	Time time.Time
-	Flags []Flag
-	SectionNumber uint16
-	Sections []*pe2.SectHeader
+	Filename          string
+	Architecture      string
+	Signature         string
+	Dependencies      []Dependency
+	Size              int64
+	Timestamp         int64
+	Time              time.Time
+	Flags             []Flag
+	SectionNumber     uint16
+	Sections          []*pe2.SectHeader
 	ImportedFunctions []Function
 }
 
@@ -122,8 +122,6 @@ func (bin *PEBinary) ToXml(doc *etree.Document) *etree.Element {
 			funcNode.CreateText(function.Name)
 		}
 	}
-
-
 
 	return root
 }

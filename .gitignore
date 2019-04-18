@@ -6,3 +6,4 @@
 /src/xml/tags.go
 
 *.xml
+*.so
