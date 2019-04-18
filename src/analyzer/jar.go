@@ -16,11 +16,11 @@ func Jargo(pathToJar string) *jargo.JarInfo {
 	return jargoResult
 }
 
-func JarAnalyzer(pathToJar string) *etree.Element {
-	jarAnalyzerPath := ANALYZERS_PATH + "\\jaranalyzer"
+func (a *Analyzer) JarAnalyzer(pathToJar string) *etree.Element {
+	jarAnalyzerPath := a.Executor.AnalyzersPath + a.Executor.Sep + "jaranalyzer"
 	dir := filepath.Dir(pathToJar)
-	ExecuteIn(jarAnalyzerPath + "\\runxmlsummary.bat " + dir + " " + TEMPLATE_DIRECTORY + "\\temp.xml", jarAnalyzerPath)
-	return getJarFileElement(TEMPLATE_DIRECTORY + "\\temp.xml", pathToJar)
+	a.Executor.ExecuteIn(jarAnalyzerPath + a.Executor.Sep + "runxmlsummary.bat " + dir + " " + a.Executor.TemplateDirectory + a.Executor.Sep + "temp.xml", jarAnalyzerPath)
+	return getJarFileElement(a.Executor.TemplateDirectory + a.Executor.Sep + "temp.xml", pathToJar)
 }
 
 func getJarFileElement(pathToJarAnalyzerXml string, pathToJar string) *etree.Element {

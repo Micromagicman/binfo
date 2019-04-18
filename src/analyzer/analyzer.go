@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/mewrev/pe"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -23,26 +24,42 @@ const (
 	TYPE_JAR = 10
 )
 
-func Analyze(pathToBinary string, binaryType int) binary.Binary {
+type Analyzer struct {
+	Executor *Executor
+}
+
+func CreateAnalyzer() *Analyzer {
+	analyzer := new(Analyzer)
+	analyzer.Executor = ExecutorFactory()
+	return analyzer
+}
+
+func (a *Analyzer) Analyze(pathToBinary string, binaryType int) binary.Binary {
 	var file binary.Binary
 	if isPortableExecutable(binaryType) {
-		file = processWindowsBinary(pathToBinary)
+		file = a.ProcessWindowsBinary(pathToBinary)
 	} else if binaryType == TYPE_JAR {
-		file = jar(pathToBinary)
+		file = a.Jar(pathToBinary)
 	}
 
 	return file
 }
 
-func isPortableExecutable(binaryType int) bool {
-	return binaryType >= TYPE_EXE && binaryType <= TYPE_EFI
+func (a *Analyzer) CreateTemplateDirectory() {
+	templateDir := a.Executor.TemplateDirectory
+	if _, err := os.Stat(templateDir); os.IsNotExist(err) {
+		err := os.MkdirAll(templateDir, os.ModePerm)
+		if err != nil {
+			panic("Error creating template directory")
+		}
+	}
 }
 
-func jar(pathToJar string) *binary.JarBinary {
+func (a *Analyzer) Jar(pathToJar string) *binary.JarBinary {
 	jargoResult := Jargo(pathToJar)
 	manifest := *jargoResult.Manifest
 
-	jar := &binary.JarBinary{}
+	jar := new(binary.JarBinary)
 	jar.Architecture = ""
 	jar.Filename = pathToJar
 	jar.Dependencies = []binary.Dependency{}
@@ -55,15 +72,15 @@ func jar(pathToJar string) *binary.JarBinary {
 	jar.MainClass = manifest["Main-Class"]
 	fmt.Println(manifest["Class-Path"])
 	jar.ClassPath = strings.Split(manifest["Class-Path"], " ")
-	jar.JarAnalyzerTree = JarAnalyzer(pathToJar)
+	jar.JarAnalyzerTree = a.JarAnalyzer(pathToJar)
 
 	return jar
 }
 
-func processWindowsBinary(pathToBinary string) *binary.PEBinary {
-	bin := &binary.PEBinary{}
-	objdump := Objdump(pathToBinary, "a", "f", "x")
-	pedumper := PEDumper(pathToBinary)
+func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) *binary.PEBinary {
+	bin := new(binary.PEBinary)
+	objdump := a.ObjDump(pathToBinary, "a", "f", "x")
+	pedumper := a.PEDumper(pathToBinary)
 	peFile, err := pe.Open(pathToBinary)
 
 	if err == nil {
@@ -151,4 +168,8 @@ func getInteger(dump *ObjDump, regex string) int64 {
 	}
 
 	return int64(timestamp)
+}
+
+func isPortableExecutable(binaryType int) bool {
+	return binaryType >= TYPE_EXE && binaryType <= TYPE_EFI
 }

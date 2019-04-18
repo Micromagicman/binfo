@@ -16,7 +16,7 @@ func main() {
 		return
 	}
 
-	analyzer.CreateTemplateDirectory()
+	a := analyzer.CreateAnalyzer()
 	for index, path := range arguments {
 		if !checkFileExists(path) {
 			log.Println("Cannot find binary file: " + path)
@@ -30,7 +30,7 @@ func main() {
 			log.Println("Unknown binary type for file " + binaryPath)
 		}
 
-		bin := analyzer.Analyze(binaryPath, binaryType)
+		bin := a.Analyze(binaryPath, binaryType)
 		if bin != nil {
 			xml.BuildXml(bin, strconv.Itoa(index) + ".xml")
 		}
