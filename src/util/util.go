@@ -20,6 +20,10 @@ func GetOptionalStringValue(value string, negativeResult string) string {
 	return value
 }
 
+func UInt64ToString(intValue uint64) string {
+	return strconv.FormatUint(intValue, 10)
+}
+
 func Int64ToString(intValue int64) string {
 	return strconv.FormatInt(intValue, 10)
 }

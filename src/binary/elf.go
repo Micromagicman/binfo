@@ -20,6 +20,7 @@ type ELFBinary struct {
 	OperatingSystem string
 	UnusedBytes     string
 	Type            string
+	Sections 		[]Section
 }
 
 func (elf *ELFBinary) GetFormat() string {
@@ -46,12 +47,24 @@ func (elf *ELFBinary) GetType() string {
 	return util.GetOptionalStringValue(elf.Type, DEFAULT_VALUE)
 }
 
-func (elf *ELFBinary) ToXml(doc *etree.Document) *etree.Element {
-	root := elf.PEBinary.ToXml(doc)
+func (elf *ELFBinary) BuildXml(doc *etree.Document) *etree.Element {
+	root := elf.PEBinary.BuildXml(doc)
 	root.AddChild(util.BuildNodeWithText("Format", elf.GetFormat()))
 	root.AddChild(util.BuildNodeWithText("Endianess", elf.GetEndianess()))
 	root.AddChild(util.BuildNodeWithText("ElfVersion", elf.GetVersion()))
 	root.AddChild(util.BuildNodeWithText("OperatingSystem", elf.GetOperatingSystem()))
 	root.AddChild(util.BuildNodeWithText("Type", elf.GetType()))
+
+	if len(elf.Sections) > 0 {
+		sectionsNode := root.CreateElement("Sections")
+		for _, s := range elf.Sections {
+			sectionNode := sectionsNode.CreateElement("Section")
+			sectionNode.CreateElement("Name").CreateText(s.Name)
+			sizeNode := sectionNode.CreateElement("Size")
+			sizeNode.CreateAttr("unit", "bytes")
+			sizeNode.CreateText(util.UInt64ToString(s.Size))
+			sectionNode.CreateElement("Flags").CreateText(s.Flags)
+		}
+	}
 	return root
 }

@@ -14,15 +14,21 @@ const (
 )
 
 type Binary interface {
-	ToXml(d *etree.Document) *etree.Element
+	GetFilename() string
+	GetSize() int64
+	BuildXml(d *etree.Document) *etree.Element
+}
+
+type XmlBuildable interface {
+	ToXml() *etree.Element
 }
 
 type XmlBuilderCallback func(item interface{}) *etree.Element
 
 type Section struct {
-	Idx  int
 	Name string
-	Size int
+	Size uint64
+	Flags string
 }
 
 type Dependency struct {
@@ -33,14 +39,27 @@ type Flag struct {
 	Name string
 }
 
+func (f *Flag) ToXml() *etree.Element {
+	functionNode := etree.NewElement("Flag")
+	functionNode.CreateText(f.Name)
+	return functionNode
+}
+
 type Function struct {
 	Name string
+}
+
+func (f *Function) ToXml() *etree.Element {
+	functionNode := etree.NewElement("Function")
+	functionNode.CreateText(f.Name)
+	return functionNode
 }
 
 type PEBinary struct {
 	Filename          string
 	Architecture      string
 	Signature         string
+	Compiler          string
 	Dependencies      []Dependency
 	Size              int64
 	Timestamp         int64
@@ -49,10 +68,19 @@ type PEBinary struct {
 	SectionNumber     uint16
 	Sections          []*pe2.SectHeader
 	ImportedFunctions []Function
+	ExportedFunctions []Function
 }
 
 func (bin *PEBinary) GetFilename() string {
 	return util.GetOptionalStringValue(bin.Filename, DEFAULT_VALUE)
+}
+
+func (bin *PEBinary) GetCompiler() string {
+	return util.GetOptionalStringValue(bin.Compiler, DEFAULT_VALUE)
+}
+
+func (bin *PEBinary) GetSize() int64 {
+	return bin.Size
 }
 
 func (bin *PEBinary) GetArchitecture() string {
@@ -67,13 +95,14 @@ func (bin *PEBinary) GetDMY() string {
 	return bin.Time.String()
 }
 
-func (bin *PEBinary) ToXml(doc *etree.Document) *etree.Element {
+func (bin *PEBinary) BuildXml(doc *etree.Document) *etree.Element {
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 
 	root := doc.CreateElement("Binary")
 	root.AddChild(util.BuildNodeWithText("Filename", bin.GetFilename()))
 	root.AddChild(util.BuildNodeWithText("Architecture", bin.GetArchitecture()))
 	root.AddChild(util.BuildNodeWithText("Signature", bin.GetSignature()))
+	root.AddChild(util.BuildNodeWithText("Compiler", bin.GetCompiler()))
 
 	if bin.Size > 0 {
 		sizeNode := root.CreateElement("Size")
@@ -103,6 +132,24 @@ func (bin *PEBinary) ToXml(doc *etree.Document) *etree.Element {
 		}
 	}
 
+	//root.AddChild(arrayOf("ImportedFunctions", bin.ImportedFunctions))
+	//root.AddChild(arrayOf("ExportedFunction", bin.ExportedFunctions))
+	if len(bin.ImportedFunctions) > 0 {
+		importedFunctionsNode := root.CreateElement("ImportedFunctions")
+		for _, function := range bin.ImportedFunctions {
+			funcNode := importedFunctionsNode.CreateElement("Function")
+			funcNode.CreateText(function.Name)
+		}
+	}
+
+	if len(bin.ExportedFunctions) > 0 {
+		importedFunctionsNode := root.CreateElement("ExportedFunctions")
+		for _, function := range bin.ExportedFunctions {
+			funcNode := importedFunctionsNode.CreateElement("Function")
+			funcNode.CreateText(function.Name)
+		}
+	}
+
 	if len(bin.Sections) > 0 {
 		sectionsNode := root.CreateElement("Sections")
 		for _, section := range bin.Sections {
@@ -115,26 +162,13 @@ func (bin *PEBinary) ToXml(doc *etree.Document) *etree.Element {
 		}
 	}
 
-	if len(bin.ImportedFunctions) > 0 {
-		importedFunctionsNode := root.CreateElement("ImportedFunctions")
-		for _, function := range bin.ImportedFunctions {
-			funcNode := importedFunctionsNode.CreateElement("Function")
-			funcNode.CreateText(function.Name)
-		}
-	}
-
 	return root
 }
 
-//func arrayOf(name string, items []interface{}, callback XmlBuilderCallback) *etree.Element {
-//	if len(items) > 0 {
-//		return nil
-//	}
-//
-//	parent := etree.NewElement(name)
-//	for _, item := range items {
-//		parent.AddChild(callback(item))
-//	}
-//
-//	return parent
-//}
+func arrayOf(name string, items []XmlBuildable) *etree.Element {
+	wrapperNode := etree.NewElement(name)
+	for _, item := range items {
+		wrapperNode.AddChild(item.ToXml())
+	}
+	return wrapperNode
+}

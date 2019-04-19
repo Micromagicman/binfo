@@ -8,7 +8,7 @@ import (
 func (a *Analyzer) ObjDump(binaryFilePath string, args ...string) *dump.ObjDump {
 	flagsString := "-" + strings.Join(args, "")
 	command := a.Executor.ObjDumpCommand(binaryFilePath, flagsString)
-	stdOut := a.Executor.Execute(command)
+	stdOut, _ := a.Executor.Execute(command)
 
 	objDump := &dump.ObjDump{}
 	objDump.Content = string(stdOut)
@@ -17,7 +17,7 @@ func (a *Analyzer) ObjDump(binaryFilePath string, args ...string) *dump.ObjDump 
 
 func (a *Analyzer) PEDumper(binaryFilePath string) *dump.PEDump {
 	command := a.Executor.PEDumperCommand(binaryFilePath)
-	stdOut := a.Executor.Execute(command)
+	stdOut, _ := a.Executor.Execute(command)
 
 	peDump := &dump.PEDump{}
 	peDump.Content = string(stdOut)
@@ -26,7 +26,7 @@ func (a *Analyzer) PEDumper(binaryFilePath string) *dump.PEDump {
 
 func (a *Analyzer) ELFReader(binaryFilePath string) *dump.ELFReader {
 	command := a.Executor.ELFReaderCommand(binaryFilePath)
-	stdOut := a.Executor.Execute(command)
+	stdOut, _ := a.Executor.Execute(command)
 
 	elfDump := &dump.ELFReader{}
 	elfDump.Content = string(stdOut)

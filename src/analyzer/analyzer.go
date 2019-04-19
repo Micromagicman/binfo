@@ -3,9 +3,12 @@ package analyzer
 import (
 	"binary"
 	"github.com/mewrev/pe"
+	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 	"util"
+	"wrapper"
 )
 
 const (
@@ -24,7 +27,8 @@ const (
 	TYPE_BIN = 12
 	TYPE_ELF = 13
 	TYPE_O = 14
-	TYPE_PRX = 15
+	TYPE_A = 15
+	TYPE_PRX = 16
 	TYPE_JAR = 20
 )
 
@@ -36,6 +40,23 @@ func CreateAnalyzer() *Analyzer {
 	analyzer := new(Analyzer)
 	analyzer.Executor = ExecutorFactory()
 	return analyzer
+}
+
+func (a *Analyzer) TryToAnalyze(unknownBinary string) (binary.Binary, error) {
+	fileDump, err := ioutil.ReadFile(unknownBinary)
+	if err != nil {
+		return nil, err
+	}
+
+	if hasELFSignature(fileDump) {
+		return a.Analyze(unknownBinary, TYPE_EXE)
+	} else if hasPESignature(fileDump) {
+		return a.Analyze(unknownBinary, TYPE_SO)
+	} else if hasJarSignature(fileDump) {
+		return a.Analyze(unknownBinary, TYPE_JAR)
+	}
+
+	return nil, nil
 }
 
 func (a *Analyzer) Analyze(pathToBinary string, binaryType int) (binary.Binary, error) {
@@ -88,14 +109,21 @@ func (a *Analyzer) Jar(pathToJar string) (*binary.JarBinary, error) {
 	jar.ManifestVersion = manifest["Manifest-Version"]
 	jar.MainClass = manifest["Main-Class"]
 	jar.ClassPath = strings.Split(manifest["Class-Path"], " ")
-	jar.JarAnalyzerTree = a.JarAnalyzer(pathToJar)
+	jarAnalyzerTree, jarAnalyzerError := a.JarAnalyzer(pathToJar)
+
+	if jarAnalyzerError != nil {
+		log.Fatal("Cannot analyze file " + pathToJar + " via JarAnalyzer")
+	} else {
+		jar.JarAnalyzerTree = jarAnalyzerTree
+
+	}
 
 	return jar, nil
 }
 
 func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*binary.PEBinary, error) {
 	bin := new(binary.PEBinary)
-	objDump := a.ObjDump(pathToBinary, "a", "f", "x")
+	objDump := a.ObjDump(pathToBinary, "x")
 	peDumper := a.PEDumper(pathToBinary)
 	peFile, peError := pe.Open(pathToBinary)
 
@@ -114,20 +142,39 @@ func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*binary.PEBinary, 
 	bin.Dependencies = objDump.GetDependencies()
 	bin.Architecture = objDump.GetArchitecture()
 	bin.ImportedFunctions = peDumper.GetImportedFunctions()
+	bin.ExportedFunctions = peDumper.GetExportedFunctions()
 	bin.Flags = objDump.GetFlags()
 
 	return bin, nil
 }
 
 func (a *Analyzer) ProcessLinuxBinary(pathToBinary string) (*binary.ELFBinary, error) {
+	fileStat, fileStatError := fileStat(pathToBinary)
+	if fileStatError != nil {
+		return nil, fileStatError
+	}
+
 	bin := new(binary.ELFBinary)
 	elfDump := a.ELFReader(pathToBinary)
 
+	bin.Filename = pathToBinary
 	bin.OperatingSystem = elfDump.GetOperatingSystem()
+	bin.Size = fileStat.Size()
 	bin.Format = elfDump.GetFormat()
 	bin.Version = elfDump.GetVersion()
 	bin.Endianess = elfDump.GetEndianess()
 	bin.Type = elfDump.GetType()
+	compilerBytes, elfInfoError := a.Executor.Execute(a.Executor.ELFInfoCommand(pathToBinary))
+
+	if elfInfoError == nil {
+		bin.Compiler = string(compilerBytes)
+	}
+
+	elfInfo, err := wrapper.CreateELFReader(pathToBinary)
+	if err == nil {
+		bin.Sections = elfInfo.GetSections()
+		bin.ImportedFunctions = elfInfo.GetImportedFunctions()
+	}
 
 	return bin, nil
 }

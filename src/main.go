@@ -2,10 +2,10 @@ package main
 
 import (
 	"analyzer"
+	"binary"
 	"log"
 	"os"
 	"path/filepath"
-	"strconv"
 	"xml"
 )
 
@@ -17,7 +17,9 @@ func main() {
 	}
 
 	a := analyzer.CreateAnalyzer()
-	for index, path := range arguments {
+	a.CreateTemplateDirectory()
+
+	for _, path := range arguments {
 		if !checkFileExists(path) {
 			log.Println("Cannot find binary file: " + path)
 			continue
@@ -25,19 +27,22 @@ func main() {
 
 		binaryPath := path
 		binaryType := detectBinaryType(binaryPath)
-		if binaryType == analyzer.TYPE_UNKNOWN {
+
+		var binFile binary.Binary
+		var err error
+		if binaryType != analyzer.TYPE_UNKNOWN {
+			binFile, err = a.Analyze(binaryPath, binaryType)
+		} else {
 			// TODO - попытка проанализировать файл без расширения
 			log.Println("Unknown binary type for file " + binaryPath)
+			binFile, err = a.TryToAnalyze(binaryPath)
 		}
 
-		bin, err := a.Analyze(binaryPath, binaryType)
 		if err != nil {
 			log.Fatal("Cannot analyze file " + binaryPath + ": " + err.Error())
-		} else if bin != nil {
-			xml.BuildXml(bin, strconv.Itoa(index) + ".xml")
 		}
+		xml.BuildXml(binFile, filepath.Base(path) + ".xml")
 	}
-
 }
 
 func checkFileExists(filePath string) bool {
@@ -62,6 +67,7 @@ func detectBinaryType(binaryPath string) int {
 		case ".bin": return analyzer.TYPE_BIN
 		case ".so": return analyzer.TYPE_SO
 		case ".o": return analyzer.TYPE_O
+		case ".a": return analyzer.TYPE_A
 		default: return analyzer.TYPE_UNKNOWN
 	}
 }

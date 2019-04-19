@@ -1,8 +1,6 @@
 package analyzer
 
 import (
-	"fmt"
-	"log"
 	"os/exec"
 	"runtime"
 )
@@ -15,12 +13,11 @@ type Executor struct {
 	RunningCommands         map[string]string
 }
 
-func (e *Executor) Execute(command string) []byte {
+func (e *Executor) Execute(command string) ([]byte, error) {
 	return e.ExecuteIn(command, e.DefaultWorkingDirectory)
 }
 
-func (e *Executor) ExecuteIn(command string, workingDir string) []byte {
-	fmt.Println(command)
+func (e *Executor) ExecuteIn(command string, workingDir string) ([]byte, error) {
 	cmd := exec.Command(command)
 	if runtime.GOOS == "windows" {
 		cmd = exec.Command("cmd", "/C", command)
@@ -30,11 +27,10 @@ func (e *Executor) ExecuteIn(command string, workingDir string) []byte {
 	stdoutStderr, err := cmd.CombinedOutput()
 
 	if err != nil {
-		log.Fatal(err)
-		return []byte{}
+		return nil, err
 	}
 
-	return stdoutStderr
+	return stdoutStderr, nil
 }
 
 func (e *Executor) ObjDumpCommand(binaryFilePath string, flags string) string {
@@ -49,6 +45,10 @@ func (e *Executor) ELFReaderCommand(binaryFilePath string) string {
 	return e.RunningCommands["elfreader"] + " " + binaryFilePath
 }
 
+func (e *Executor) ELFInfoCommand(binaryFilePath string) string {
+	return e.RunningCommands["elfinfo"] + " -c " + binaryFilePath
+}
+
 func ExecutorFactory() *Executor {
 	switch runtime.GOOS {
 		case "windows": return createWindowsExecutor()
@@ -58,24 +58,33 @@ func ExecutorFactory() *Executor {
 
 func createLinuxExecutor() *Executor {
 	linExec := new(Executor)
-	linExec.DefaultWorkingDirectory = "~"
-	linExec.AnalyzersPath = "~/binfo/backend/linux"
-	linExec.TemplateDirectory = "~/temp"
+	linExec.DefaultWorkingDirectory = "./"
+	linExec.AnalyzersPath = linExec.DefaultWorkingDirectory + "backend/linux/"
+	linExec.TemplateDirectory = linExec.DefaultWorkingDirectory + "temp/"
 	linExec.Sep = "/"
+	linExec.RunningCommands = map[string]string {
+		"objdump": "objdump",
+		"pedumper": linExec.AnalyzersPath + "pedumper",
+		"jaranalyzer": linExec.AnalyzersPath + "jaranalyzer/runxmlsummary",
+		"elfreader": linExec.AnalyzersPath + "elfreader",
+		"readelf": "readelf",
+	}
 	return linExec
 }
 
 func createWindowsExecutor() *Executor {
 	winExec := new(Executor)
-	winExec.DefaultWorkingDirectory = "C:\\Users\\Admin"
-	winExec.AnalyzersPath = "C:\\Users\\Admin\\Work\\binfo\\backend\\windows"
-	winExec.TemplateDirectory = "C:\\Users\\Admin\\Work\\temp"
+	winExec.DefaultWorkingDirectory = ".\\"
+	winExec.AnalyzersPath = winExec.DefaultWorkingDirectory + "backend\\windows\\"
+	winExec.TemplateDirectory = winExec.DefaultWorkingDirectory +  "temp\\"
 	winExec.Sep = "\\"
 	winExec.RunningCommands = map[string]string {
-		"objdump": "call " + winExec.AnalyzersPath + "\\objdump.exe",
-		"pedumper": "call " + winExec.AnalyzersPath + "\\pedumper.exe",
-		"jaranalyzer": "call " + winExec.AnalyzersPath + "\\jaranalyzer\\runxmlsummary.bat",
-		"elfreader": "call " + winExec.AnalyzersPath + "\\elfreader.exe",
+		"objdump": "call " + winExec.AnalyzersPath + "objdump.exe",
+		"pedumper": "call " + winExec.AnalyzersPath + "pedumper.exe",
+		"jaranalyzer": "call " + winExec.AnalyzersPath + "jaranalyzer\\runxmlsummary.bat",
+		"elfreader": "call " + winExec.AnalyzersPath + "elfreader.exe",
+		"readelf": "call " + winExec.AnalyzersPath + "readelf.exe",
+		"elfinfo": "call " + winExec.AnalyzersPath + "elfinfo.exe",
 	}
 	return winExec
 }

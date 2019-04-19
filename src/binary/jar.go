@@ -40,8 +40,8 @@ func (jar *JarBinary) GetMainClass() string {
 	return util.GetOptionalStringValue(jar.MainClass, DEFAULT_VALUE)
 }
 
-func (jar *JarBinary) ToXml(doc *etree.Document) *etree.Element {
-	root := jar.PEBinary.ToXml(doc)
+func (jar *JarBinary) BuildXml(doc *etree.Document) *etree.Element {
+	root := jar.PEBinary.BuildXml(doc)
 
 	root.AddChild(util.BuildNodeWithText("ManifestVersion", jar.GetManifestVersion()))
 	root.AddChild(util.BuildNodeWithText("CreatedBy", jar.GetCreatedBy()))
