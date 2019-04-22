@@ -12,15 +12,16 @@ const (
 )
 
 type ELFBinary struct {
-	PEBinary
-	Format          string
-	Endianess       string
-	Version         string
-	SectionCount    uint16
-	OperatingSystem string
-	UnusedBytes     string
-	Type            string
-	Sections 		[]Section
+	BaseBinary
+	Format            string
+	Endianess         string
+	Version           string
+	SectionCount      uint16
+	OperatingSystem   string
+	UnusedBytes       string
+	Type              string
+	ImportedFunctions []Function
+	Sections          []Section
 }
 
 func (elf *ELFBinary) GetFormat() string {
@@ -47,8 +48,12 @@ func (elf *ELFBinary) GetType() string {
 	return util.GetOptionalStringValue(elf.Type, DEFAULT_VALUE)
 }
 
+func (elf *ELFBinary) GetMagic() string {
+	return "0x7F454C46 (ELF)"
+}
+
 func (elf *ELFBinary) BuildXml(doc *etree.Document) *etree.Element {
-	root := elf.PEBinary.BuildXml(doc)
+	root := BuildBaseBinaryInfo(elf, doc)
 	root.AddChild(util.BuildNodeWithText("Format", elf.GetFormat()))
 	root.AddChild(util.BuildNodeWithText("Endianess", elf.GetEndianess()))
 	root.AddChild(util.BuildNodeWithText("ElfVersion", elf.GetVersion()))

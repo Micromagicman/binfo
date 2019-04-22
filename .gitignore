@@ -1,9 +1,9 @@
 /.idea/
 /backend/
 /pkg/
+/out/
 
 /src/github.com/
-/src/xml/tags.go
 
 *.xml
 *.so

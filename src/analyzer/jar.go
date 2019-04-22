@@ -19,7 +19,7 @@ func Jargo(pathToJar string) *jargo.JarInfo {
 func (a *Analyzer) JarAnalyzer(pathToJar string) (*etree.Element, error) {
 	jarAnalyzerPath := a.Executor.AnalyzersPath + a.Executor.Sep + "jaranalyzer"
 	dir := filepath.Dir(pathToJar)
-	_, executeError := a.Executor.ExecuteIn(jarAnalyzerPath+a.Executor.Sep+"runxmlsummary.bat "+dir+" "+a.Executor.TemplateDirectory+a.Executor.Sep+"temp.xml", jarAnalyzerPath)
+	_, executeError := a.Executor.Execute(jarAnalyzerPath+a.Executor.Sep+"runxmlsummary.bat "+dir+" "+a.Executor.TemplateDirectory+a.Executor.Sep+"temp.xml")
 
 	if executeError != nil {
 		return nil, executeError

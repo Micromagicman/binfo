@@ -2,15 +2,20 @@ package binary
 
 import (
 	"github.com/beevik/etree"
+	"github.com/mewrev/pe"
 	"util"
 )
 
 const (
 	DEFAULT_MANIFEST_VERSION = "1.0"
+	DEFAULT_JAVA_COMPILER = "Javac"
 )
 
 type JarBinary struct {
-	PEBinary
+	BaseBinary
+	Dependencies    []Dependency
+	Flags           []Flag
+	Sections        []*pe.SectHeader
 	ManifestVersion string
 	ClassPath       []string
 	BuildJdk        string
@@ -40,9 +45,16 @@ func (jar *JarBinary) GetMainClass() string {
 	return util.GetOptionalStringValue(jar.MainClass, DEFAULT_VALUE)
 }
 
-func (jar *JarBinary) BuildXml(doc *etree.Document) *etree.Element {
-	root := jar.PEBinary.BuildXml(doc)
+func (jar *JarBinary) GetCompiler() string {
+	return util.GetOptionalStringValue(jar.Compiler, DEFAULT_JAVA_COMPILER)
+}
 
+func (jar *JarBinary) GetMagic() string {
+	return "0x504B0304"
+}
+
+func (jar *JarBinary) BuildXml(doc *etree.Document) *etree.Element {
+	root := BuildBaseBinaryInfo(jar, doc)
 	root.AddChild(util.BuildNodeWithText("ManifestVersion", jar.GetManifestVersion()))
 	root.AddChild(util.BuildNodeWithText("CreatedBy", jar.GetCreatedBy()))
 	root.AddChild(util.BuildNodeWithText("BuiltBy", jar.GetBuiltBy()))

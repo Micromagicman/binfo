@@ -6,11 +6,6 @@ type PEDump struct {
 	BaseDump
 }
 
-func (pd *PEDump) GetSignature() string {
-	signatureMatch := pd.Find("Signature:\\s+([^\\n]+)")
-	return Group(signatureMatch, 1)
-}
-
 func (pd *PEDump) GetImportedFunctions() []binary.Function {
 	return pd.functionsByRegex("Function Name \\(Hint\\):\\s+([^\\s]+)")
 }
@@ -25,6 +20,10 @@ func (pd *PEDump) GetTimestamp() int64 {
 
 func (pd *PEDump) GetSize() int64 {
 	return GetInteger(pd, "File size:\\s+(\\d+?) bytes")
+}
+
+func (pd *PEDump) GetEntryPointAddress() string {
+	return Group(pd.Find("Address of entry point:\\s+(0x[^\\n]+)"), 1)
 }
 
 func (pd *PEDump) functionsByRegex(regex string) []binary.Function {

@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"xml"
+	"util"
 )
 
 func main() {
@@ -18,6 +18,7 @@ func main() {
 
 	a := analyzer.CreateAnalyzer()
 	a.CreateTemplateDirectory()
+	a.InitOutputDirectory()
 
 	for _, path := range arguments {
 		if !checkFileExists(path) {
@@ -38,11 +39,11 @@ func main() {
 			binFile, err = a.TryToAnalyze(binaryPath)
 		}
 
-		if err != nil {
-			log.Fatal("Cannot analyze file " + binaryPath + ": " + err.Error())
-		}
-		xml.BuildXml(binFile, filepath.Base(path) + ".xml")
+		util.LogIfError(err, "Cannot analyze file " + binaryPath + ": " + err.Error())
+		a.SaveResult(binFile, path)
 	}
+
+	a.DeleteTemplateDirectory()
 }
 
 func checkFileExists(filePath string) bool {

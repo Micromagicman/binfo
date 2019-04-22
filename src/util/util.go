@@ -3,7 +3,11 @@ package util
 import (
 	"fmt"
 	"github.com/beevik/etree"
+	"log"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -39,3 +43,58 @@ func IntToString(intValue int) string {
 func TimestampToTime(timestamp int64) time.Time {
 	return time.Unix(timestamp, 0)
 }
+
+func GetLanguageByCompiler(compilerName string) string {
+	lowerCase := strings.ToLower(compilerName)
+	if strings.Contains(lowerCase, "gcc") {
+		return "C/C++"
+	}
+
+	if strings.Contains(lowerCase, "jdk") || strings.Contains(lowerCase, "javac") {
+		return "Java"
+	}
+
+	return "Unknown"
+}
+
+func CreateDirectory(name string) error {
+	err := os.MkdirAll(name, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func RemoveDirectory(name string) error {
+	return os.RemoveAll(name)
+}
+
+func ClearDirectory(dir string) error {
+	d, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dir, name))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func LogIfError(err error, message string) {
+	if err != nil {
+		log.Println(message)
+	}
+}
+

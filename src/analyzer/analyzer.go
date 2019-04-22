@@ -6,9 +6,11 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"util"
 	"wrapper"
+	"xml"
 )
 
 const (
@@ -49,11 +51,11 @@ func (a *Analyzer) TryToAnalyze(unknownBinary string) (binary.Binary, error) {
 	}
 
 	if hasELFSignature(fileDump) {
-		return a.Analyze(unknownBinary, TYPE_EXE)
+		return a.ProcessLinuxBinary(unknownBinary)
 	} else if hasPESignature(fileDump) {
-		return a.Analyze(unknownBinary, TYPE_SO)
+		return a.ProcessWindowsBinary(unknownBinary)
 	} else if hasJarSignature(fileDump) {
-		return a.Analyze(unknownBinary, TYPE_JAR)
+		return a.Jar(unknownBinary)
 	}
 
 	return nil, nil
@@ -62,12 +64,15 @@ func (a *Analyzer) TryToAnalyze(unknownBinary string) (binary.Binary, error) {
 func (a *Analyzer) Analyze(pathToBinary string, binaryType int) (binary.Binary, error) {
 	var file binary.Binary
 	var err error
-	if isPortableExecutable(binaryType) {
+
+	if binaryType == TYPE_EXE {
+		file, err = a.TryToAnalyze(pathToBinary)
+	} else if binaryType == TYPE_JAR {
+		file, err = a.Jar(pathToBinary)
+	} else if isPortableExecutable(binaryType) {
 		file, err = a.ProcessWindowsBinary(pathToBinary)
 	} else if isElf(binaryType) {
 		file, err = a.ProcessLinuxBinary(pathToBinary)
-	} else if binaryType == TYPE_JAR {
-		file, err = a.Jar(pathToBinary)
 	}
 
 	if err != nil {
@@ -75,16 +80,6 @@ func (a *Analyzer) Analyze(pathToBinary string, binaryType int) (binary.Binary, 
 	}
 
 	return file, nil
-}
-
-func (a *Analyzer) CreateTemplateDirectory() {
-	templateDir := a.Executor.TemplateDirectory
-	if _, err := os.Stat(templateDir); os.IsNotExist(err) {
-		err := os.MkdirAll(templateDir, os.ModePerm)
-		if err != nil {
-			panic("Error creating template directory")
-		}
-	}
 }
 
 func (a *Analyzer) Jar(pathToJar string) (*binary.JarBinary, error) {
@@ -100,6 +95,7 @@ func (a *Analyzer) Jar(pathToJar string) (*binary.JarBinary, error) {
 	jar.Architecture = ""
 	jar.Size = fileStat.Size()
 	jar.Filename = pathToJar
+	jar.ProgrammingLanguage = "Java"
 	jar.Dependencies = []binary.Dependency{}
 	jar.Flags = []binary.Flag{}
 	jar.Sections = []*pe.SectHeader{}
@@ -135,8 +131,8 @@ func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*binary.PEBinary, 
 	}
 
 	bin.Filename = pathToBinary
-	bin.Signature = peDumper.GetSignature()
 	bin.Size = peDumper.GetSize()
+	bin.EntryPointAddress = peDumper.GetEntryPointAddress()
 	bin.Timestamp = peDumper.GetTimestamp()
 	bin.Time = util.TimestampToTime(bin.Timestamp)
 	bin.Dependencies = objDump.GetDependencies()
@@ -168,6 +164,7 @@ func (a *Analyzer) ProcessLinuxBinary(pathToBinary string) (*binary.ELFBinary, e
 
 	if elfInfoError == nil {
 		bin.Compiler = string(compilerBytes)
+		bin.ProgrammingLanguage = util.GetLanguageByCompiler(bin.Compiler)
 	}
 
 	elfInfo, err := wrapper.CreateELFReader(pathToBinary)
@@ -180,11 +177,11 @@ func (a *Analyzer) ProcessLinuxBinary(pathToBinary string) (*binary.ELFBinary, e
 }
 
 func isPortableExecutable(binaryType int) bool {
-	return binaryType >= TYPE_EXE && binaryType <= TYPE_LIB
+	return binaryType >= TYPE_DLL && binaryType <= TYPE_LIB
 }
 
 func isElf(binaryType int) bool {
-	return binaryType == TYPE_EXE || (binaryType >= TYPE_SO && binaryType <= TYPE_PRX)
+	return binaryType >= TYPE_SO && binaryType <= TYPE_PRX
 }
 
 func fileStat(path string) (os.FileInfo, error) {
@@ -199,4 +196,32 @@ func fileStat(path string) (os.FileInfo, error) {
 	}
 
 	return info, nil
+}
+
+func (a *Analyzer) CreateTemplateDirectory() {
+	templateDir := a.Executor.TemplateDirectory
+	if _, err := os.Stat(templateDir); os.IsNotExist(err) {
+		err := util.CreateDirectory(templateDir)
+		util.LogIfError(err, "Error creating template directory")
+	}
+}
+
+func (a *Analyzer) InitOutputDirectory() {
+	outDir := "out"
+	if _, err := os.Stat(outDir); os.IsNotExist(err) {
+		err := util.CreateDirectory(outDir)
+		util.LogIfError(err, "Error creating output directory")
+	} else {
+		err := util.ClearDirectory(outDir)
+		util.LogIfError(err,"Error clear output directory")
+	}
+}
+
+func (a *Analyzer) DeleteTemplateDirectory() {
+	err := util.RemoveDirectory(a.Executor.TemplateDirectory)
+	util.LogIfError(err, "Error removing template directory")
+}
+
+func (a *Analyzer) SaveResult(bin binary.Binary, path string) {
+	xml.BuildXml(bin, "out" + a.Executor.Sep + filepath.Base(path) + ".xml")
 }
