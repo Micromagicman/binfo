@@ -26,6 +26,14 @@ func (pd *PEDump) GetEntryPointAddress() string {
 	return Group(pd.Find("Address of entry point:\\s+(0x[^\\n]+)"), 1)
 }
 
+func (pd *PEDump) GetCodeSectionAddress() string {
+	return Group(pd.Find("Base address of code section:\\s+(0x[^\\n]+)"), 1)
+}
+
+func (pd *PEDump) GetDataSectionAddress() string {
+	return Group(pd.Find("Base address of data section:\\s+(0x[^\\n]+)"), 1)
+}
+
 func (pd *PEDump) functionsByRegex(regex string) []binary.Function {
 	functionsMatch := pd.FindAll(regex)
 	functions := make([]binary.Function, len(functionsMatch))

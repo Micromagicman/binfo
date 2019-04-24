@@ -60,6 +60,14 @@ func (elf *ELFBinary) BuildXml(doc *etree.Document) *etree.Element {
 	root.AddChild(util.BuildNodeWithText("OperatingSystem", elf.GetOperatingSystem()))
 	root.AddChild(util.BuildNodeWithText("Type", elf.GetType()))
 
+	if len(elf.ImportedFunctions) > 0 {
+		importedFunctionsNode := root.CreateElement("ImportedFunctions")
+		for _, function := range elf.ImportedFunctions {
+			funcNode := importedFunctionsNode.CreateElement("Function")
+			funcNode.CreateText(function.Name)
+		}
+	}
+
 	if len(elf.Sections) > 0 {
 		sectionsNode := root.CreateElement("Sections")
 		for _, s := range elf.Sections {

@@ -2,6 +2,7 @@
 /backend/
 /pkg/
 /out/
+/binaries/
 
 /src/github.com/
 

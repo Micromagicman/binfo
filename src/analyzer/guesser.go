@@ -15,4 +15,3 @@ func hasJarSignature(byteDump []byte) bool {
 		 byteDump[2] == 0x05 && byteDump[3] == 0x06 || // Пустой архив
 		 byteDump[2] == 0x07 && byteDump[3] == 0x08) // Составной архив
 }
-

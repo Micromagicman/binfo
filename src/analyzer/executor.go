@@ -27,7 +27,7 @@ func (e *Executor) ExecuteIn(command string, workingDir string) ([]byte, error) 
 	stdoutStderr, err := cmd.CombinedOutput()
 
 	if err != nil {
-		return nil, err
+		return []byte{}, nil
 	}
 
 	return stdoutStderr, nil

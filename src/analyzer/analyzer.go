@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"binary"
+	"fmt"
 	"github.com/mewrev/pe"
 	"io/ioutil"
 	"log"
@@ -16,6 +17,8 @@ import (
 const (
 	TYPE_UNKNOWN = -1
 	TYPE_EXE = 0
+
+	// PE
 	TYPE_DLL = 1
 	TYPE_OCX = 2
 	TYPE_SYS = 3
@@ -24,6 +27,8 @@ const (
 	TYPE_CPL = 6
 	TYPE_EFI = 7
 	TYPE_LIB = 8
+
+	// ELF
 	TYPE_SO = 10
 	TYPE_AXF = 11
 	TYPE_BIN = 12
@@ -31,6 +36,7 @@ const (
 	TYPE_O = 14
 	TYPE_A = 15
 	TYPE_PRX = 16
+
 	TYPE_JAR = 20
 )
 
@@ -51,10 +57,13 @@ func (a *Analyzer) TryToAnalyze(unknownBinary string) (binary.Binary, error) {
 	}
 
 	if hasELFSignature(fileDump) {
+		fmt.Println("Detect ELF signature")
 		return a.ProcessLinuxBinary(unknownBinary)
 	} else if hasPESignature(fileDump) {
+		fmt.Println("Detect PE signature")
 		return a.ProcessWindowsBinary(unknownBinary)
 	} else if hasJarSignature(fileDump) {
+		fmt.Println("Detect Jar signature")
 		return a.Jar(unknownBinary)
 	}
 
@@ -132,7 +141,6 @@ func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*binary.PEBinary, 
 
 	bin.Filename = pathToBinary
 	bin.Size = peDumper.GetSize()
-	bin.EntryPointAddress = peDumper.GetEntryPointAddress()
 	bin.Timestamp = peDumper.GetTimestamp()
 	bin.Time = util.TimestampToTime(bin.Timestamp)
 	bin.Dependencies = objDump.GetDependencies()
@@ -140,6 +148,11 @@ func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*binary.PEBinary, 
 	bin.ImportedFunctions = peDumper.GetImportedFunctions()
 	bin.ExportedFunctions = peDumper.GetExportedFunctions()
 	bin.Flags = objDump.GetFlags()
+
+	bin.Addresses = map[string]string{}
+	bin.Addresses["EntryPoint"] = peDumper.GetEntryPointAddress()
+	bin.Addresses["CodeSection"] = peDumper.GetCodeSectionAddress()
+	bin.Addresses["DataSection"] = peDumper.GetDataSectionAddress()
 
 	return bin, nil
 }
@@ -206,8 +219,7 @@ func (a *Analyzer) CreateTemplateDirectory() {
 	}
 }
 
-func (a *Analyzer) InitOutputDirectory() {
-	outDir := "out"
+func (a *Analyzer) InitOutputDirectory(outDir string) {
 	if _, err := os.Stat(outDir); os.IsNotExist(err) {
 		err := util.CreateDirectory(outDir)
 		util.LogIfError(err, "Error creating output directory")

@@ -3,52 +3,56 @@ package main
 import (
 	"analyzer"
 	"binary"
+	"flag"
+	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 	"util"
 )
 
 func main() {
-	arguments := os.Args[1:]
-	if len(arguments) == 0 {
-		log.Fatal("First argument must be a path to binary file")
-		return
+	binaryDirectory := flag.String("d", "", "Directory with binary files")
+	outputDirectory := flag.String("o", "", "Output directory")
+	flag.Parse()
+
+	if "" == *binaryDirectory {
+		log.Fatal("Directory with binary files not defined")
 	}
 
+	if "" == *outputDirectory {
+		log.Fatal("Output directory not defined")
+	}
+
+	binariesPath := *binaryDirectory
+	outputPath := *outputDirectory
 	a := analyzer.CreateAnalyzer()
 	a.CreateTemplateDirectory()
-	a.InitOutputDirectory()
+	a.InitOutputDirectory(outputPath)
 
-	for _, path := range arguments {
-		if !checkFileExists(path) {
+	for _, path := range util.GetDirectoryFilePaths(binariesPath) {
+		if !util.CheckFileExists(path) {
 			log.Println("Cannot find binary file: " + path)
 			continue
 		}
 
-		binaryPath := path
-		binaryType := detectBinaryType(binaryPath)
-
+		fmt.Println("Processing " + path)
 		var binFile binary.Binary
 		var err error
+		binaryType := detectBinaryType(path)
+
 		if binaryType != analyzer.TYPE_UNKNOWN {
-			binFile, err = a.Analyze(binaryPath, binaryType)
+			binFile, err = a.Analyze(path, binaryType)
 		} else {
-			// TODO - попытка проанализировать файл без расширения
-			log.Println("Unknown binary type for file " + binaryPath)
-			binFile, err = a.TryToAnalyze(binaryPath)
+			// попытка проанализировать файл без расширения
+			log.Println("Unknown binary type for file " + path)
+			binFile, err = a.TryToAnalyze(path)
 		}
 
-		util.LogIfError(err, "Cannot analyze file " + binaryPath + ": " + err.Error())
+		util.LogIfError(err, "Cannot analyze file " +path)
 		a.SaveResult(binFile, path)
 	}
 
 	a.DeleteTemplateDirectory()
-}
-
-func checkFileExists(filePath string) bool {
-	_, err := os.Stat(filePath)
-	return err == nil
 }
 
 func detectBinaryType(binaryPath string) int {

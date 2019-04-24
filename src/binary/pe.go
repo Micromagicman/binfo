@@ -9,7 +9,7 @@ import (
 type PEBinary struct {
 	BaseBinary
 	Architecture      string
-	EntryPointAddress string
+	Addresses         map[string]string
 	Dependencies      []Dependency
 	Flags             []Flag
 	SectionNumber     uint16
@@ -24,8 +24,6 @@ func (bin *PEBinary) GetMagic() string {
 
 func (bin *PEBinary) BuildXml(doc *etree.Document) *etree.Element {
 	root := BuildBaseBinaryInfo(bin, doc)
-	root.AddChild(util.BuildNodeWithText("EntryPoint", bin.EntryPointAddress))
-
 	if len(bin.Dependencies) > 0 {
 		dependenciesNode := root.CreateElement("Dependencies")
 		for _, dependency := range bin.Dependencies {
@@ -39,6 +37,13 @@ func (bin *PEBinary) BuildXml(doc *etree.Document) *etree.Element {
 		for _, flag := range bin.Flags {
 			flagNode := flagsNode.CreateElement("Flag")
 			flagNode.CreateText(flag.Name)
+		}
+	}
+
+	if len(bin.Addresses) > 0 {
+		addressesNode := root.CreateElement("Addresses")
+		for name, address := range bin.Addresses {
+			addressesNode.AddChild(util.BuildNodeWithText(name, address))
 		}
 	}
 

@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"github.com/beevik/etree"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -92,9 +93,29 @@ func ClearDirectory(dir string) error {
 	return nil
 }
 
+func CheckFileExists(filePath string) bool {
+	_, err := os.Stat(filePath)
+	return err == nil
+}
+
+func GetDirectoryFilePaths(directoryPath string) []string {
+	fmt.Println(directoryPath)
+	files, err := ioutil.ReadDir(directoryPath)
+	if err != nil {
+		log.Fatal("Cannot read directory with binaries")
+	}
+
+	filePaths := make([]string, len(files))
+	for i, file := range files {
+		filePaths[i] = directoryPath + string(os.PathSeparator) + file.Name()
+	}
+
+	return filePaths
+}
+
 func LogIfError(err error, message string) {
 	if err != nil {
-		log.Println(message)
+		log.Println(message + ": " + err.Error())
 	}
 }
 
