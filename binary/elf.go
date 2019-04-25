@@ -79,5 +79,6 @@ func (elf *ELFBinary) BuildXml(doc *etree.Document) *etree.Element {
 			sectionNode.CreateElement("Flags").CreateText(s.Flags)
 		}
 	}
+	
 	return root
 }

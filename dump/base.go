@@ -1,7 +1,6 @@
 package dump
 
 import (
-	"log"
 	"regexp"
 	"strconv"
 )
@@ -34,9 +33,8 @@ func (bd *BaseDump) FindAll(regExp string) [][]string {
 
 func GetInteger(dump Dump, regex string) int64 {
 	timestampMatch := dump.Find(regex)
-	timestamp, err := strconv.Atoi(timestampMatch[1])
+	timestamp, err := strconv.Atoi(Group(timestampMatch, 1))
 	if err != nil {
-		log.Fatal("Error convert to int")
 		return -1
 	}
 

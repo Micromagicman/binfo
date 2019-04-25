@@ -44,12 +44,12 @@ func main() {
 		binFile, err = a.Analyze(path, binaryType)
 	} else {
 		// попытка проанализировать файл без расширения
-		log.Println("Unknown binary analyzer.TYPE for file " + path)
+		log.Println("Unknown binary type for file " + path)
 		binFile, err = a.TryToAnalyze(path)
 	}
 
 	util.LogIfError(err, "Cannot analyze file " + path)
-	a.SaveResult(binFile, path)
+	a.SaveResult(binFile, outputPath, path)
 }
 
 	a.DeleteTemplateDirectory()

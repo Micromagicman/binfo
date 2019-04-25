@@ -73,9 +73,11 @@ func (jar *JarBinary) BuildXml(doc *etree.Document) *etree.Element {
 		classPathsElement.CreateText(EMPTY)
 	}
 
-	for _, c := range jar.JarAnalyzerTree.ChildElements() {
-		if len(c.ChildElements()) > 0 {
-			root.AddChild(c)
+	if jar.JarAnalyzerTree != nil {
+		for _, c := range jar.JarAnalyzerTree.ChildElements() {
+			if len(c.ChildElements()) > 0 {
+				root.AddChild(c)
+			}
 		}
 	}
 

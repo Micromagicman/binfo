@@ -25,20 +25,20 @@ func (a *Analyzer) JarAnalyzer(pathToJar string) (*etree.Element, error) {
 		return nil, executeError
 	}
 
-	return getJarFileElement(a.Executor.TemplateDirectory + a.Executor.Sep + "temp.xml", pathToJar), nil
+	return getJarFileElement(a.Executor.TemplateDirectory + "temp.xml", pathToJar)
 }
 
-func getJarFileElement(pathToJarAnalyzerXml string, pathToJar string) *etree.Element {
+func getJarFileElement(pathToJarAnalyzerXml string, pathToJar string) (*etree.Element, error) {
 	doc := etree.NewDocument()
 	if err := doc.ReadFromFile(pathToJarAnalyzerXml); err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	for _, jar := range doc.FindElements("//Jar") {
 		if strings.HasSuffix(pathToJar, jar.SelectAttr("name").Value) {
-			return jar.ChildElements()[0] // Summary
+			return jar.ChildElements()[0], nil // Summary
 		}
 	}
 
-	return nil
+	return nil, nil
 }

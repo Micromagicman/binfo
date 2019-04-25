@@ -15,6 +15,6 @@ func BuildXml(bin binary.Binary, outputFilename string) {
 	doc.Indent(4)
 	_, err := doc.WriteTo(file)
 	if err != nil {
-		log.Fatal("Error when create xml")
+		log.Println("Error creating xml output for file " + outputFilename)
 	}
 }

@@ -117,7 +117,7 @@ func (a *Analyzer) Jar(pathToJar string) (*binary.JarBinary, error) {
 	jarAnalyzerTree, jarAnalyzerError := a.JarAnalyzer(pathToJar)
 
 	if jarAnalyzerError != nil {
-		log.Fatal("Cannot analyze file " + pathToJar + " via JarAnalyzer")
+		log.Println("Cannot analyze file " + pathToJar + " via JarAnalyzer")
 	} else {
 		jar.JarAnalyzerTree = jarAnalyzerTree
 
@@ -234,6 +234,6 @@ func (a *Analyzer) DeleteTemplateDirectory() {
 	util.LogIfError(err, "Error removing template directory")
 }
 
-func (a *Analyzer) SaveResult(bin binary.Binary, path string) {
-	xml.BuildXml(bin, "out" + a.Executor.Sep + filepath.Base(path) + ".xml")
+func (a *Analyzer) SaveResult(bin binary.Binary, outputDirectory string, path string) {
+	xml.BuildXml(bin, outputDirectory + a.Executor.Sep + filepath.Base(path) + ".xml")
 }

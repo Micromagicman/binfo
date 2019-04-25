@@ -26,7 +26,11 @@ func (od *ObjDump) GetArchitecture() string {
 
 func (od *ObjDump) GetFlags() []binary.Flag {
 	flagsMatch := od.FindAll("flags 0x[0-9a-f]+?:\\s+(([A-Z0-9_]+, )*[A-Z0-9_]+)\\s")
-	flagStrings := strings.Split(flagsMatch[0][1], ", ")
+	if len(flagsMatch) == 0 {
+		return []binary.Flag{}
+	}
+	
+	flagStrings := strings.Split(Group(flagsMatch[0], 1), ", ")
 	flags := make([]binary.Flag, len(flagStrings))
 
 	for index, element := range flagStrings {
