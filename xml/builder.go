@@ -1,7 +1,7 @@
 package xml
 
 import (
-	"binary"
+	"binfo/binary"
 	"github.com/beevik/etree"
 	"log"
 	"os"

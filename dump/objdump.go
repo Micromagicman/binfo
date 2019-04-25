@@ -1,7 +1,7 @@
 package dump
 
 import (
-	"binary"
+	"binfo/binary"
 	"strings"
 )
 
@@ -14,14 +14,14 @@ func (od *ObjDump) GetDependencies() []binary.Dependency {
 	dependencies := make([]binary.Dependency, len(depMatches))
 
 	for index, element := range depMatches {
-		dependencies[index] = binary.Dependency{Name: element[1]}
+		dependencies[index] = binary.Dependency{Name: Group(element,1)}
 	}
 
 	return dependencies
 }
 
 func (od *ObjDump) GetArchitecture() string {
-	return od.BaseDump.FindAll("architecture: (.+?),")[0][1]
+	return Group(od.BaseDump.Find("architecture: (.+?),"), 1)
 }
 
 func (od *ObjDump) GetFlags() []binary.Flag {

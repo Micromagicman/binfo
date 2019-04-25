@@ -1,7 +1,10 @@
 package analyzer
 
 import (
-	"binary"
+	"binfo/binary"
+	"binfo/util"
+	"binfo/wrapper"
+	"binfo/xml"
 	"fmt"
 	"github.com/mewrev/pe"
 	"io/ioutil"
@@ -9,9 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"util"
-	"wrapper"
-	"xml"
 )
 
 const (

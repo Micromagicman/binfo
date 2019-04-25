@@ -1,7 +1,7 @@
 package analyzer
 
 import (
-	"dump"
+	"binfo/dump"
 	"strings"
 )
 

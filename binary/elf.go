@@ -1,8 +1,8 @@
 package binary
 
 import (
+	"binfo/util"
 	"github.com/beevik/etree"
-	"util"
 )
 
 const (

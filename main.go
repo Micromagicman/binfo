@@ -1,13 +1,13 @@
 package main
 
 import (
-	"analyzer"
-	"binary"
+	"binfo/analyzer"
+	"binfo/binary"
+	"binfo/util"
 	"flag"
 	"fmt"
 	"log"
 	"path/filepath"
-	"util"
 )
 
 func main() {
@@ -37,20 +37,20 @@ func main() {
 
 		fmt.Println("Processing " + path)
 		var binFile binary.Binary
-		var err error
-		binaryType := detectBinaryType(path)
+	var err error
+	binaryType := detectBinaryType(path)
 
-		if binaryType != analyzer.TYPE_UNKNOWN {
-			binFile, err = a.Analyze(path, binaryType)
-		} else {
-			// попытка проанализировать файл без расширения
-			log.Println("Unknown binary type for file " + path)
-			binFile, err = a.TryToAnalyze(path)
-		}
-
-		util.LogIfError(err, "Cannot analyze file " +path)
-		a.SaveResult(binFile, path)
+	if binaryType != analyzer.TYPE_UNKNOWN {
+		binFile, err = a.Analyze(path, binaryType)
+	} else {
+		// попытка проанализировать файл без расширения
+		log.Println("Unknown binary analyzer.TYPE for file " + path)
+		binFile, err = a.TryToAnalyze(path)
 	}
+
+	util.LogIfError(err, "Cannot analyze file " + path)
+	a.SaveResult(binFile, path)
+}
 
 	a.DeleteTemplateDirectory()
 }

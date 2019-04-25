@@ -1,6 +1,8 @@
 package dump
 
-import "binary"
+import (
+	"binfo/binary"
+)
 
 type PEDump struct {
 	BaseDump

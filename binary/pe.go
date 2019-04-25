@@ -1,9 +1,10 @@
 package binary
 
 import (
+	"binfo/util"
+	"fmt"
 	"github.com/beevik/etree"
 	pe2 "github.com/mewrev/pe"
-	"util"
 )
 
 type PEBinary struct {
@@ -24,6 +25,7 @@ func (bin *PEBinary) GetMagic() string {
 
 func (bin *PEBinary) BuildXml(doc *etree.Document) *etree.Element {
 	root := BuildBaseBinaryInfo(bin, doc)
+	fmt.Println(bin.Architecture)
 	if len(bin.Dependencies) > 0 {
 		dependenciesNode := root.CreateElement("Dependencies")
 		for _, dependency := range bin.Dependencies {

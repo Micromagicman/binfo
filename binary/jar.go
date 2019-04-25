@@ -1,9 +1,9 @@
 package binary
 
 import (
+	"binfo/util"
 	"github.com/beevik/etree"
 	"github.com/mewrev/pe"
-	"util"
 )
 
 const (

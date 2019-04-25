@@ -1,7 +1,7 @@
 package wrapper
 
 import (
-	"binary"
+	"binfo/binary"
 	"fmt"
 	"github.com/yalue/elf_reader"
 	"io/ioutil"
