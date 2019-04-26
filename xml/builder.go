@@ -1,13 +1,13 @@
 package xml
 
 import (
-	"binfo/binary"
+	"binfo/executable"
 	"github.com/beevik/etree"
 	"log"
 	"os"
 )
 
-func BuildXml(bin binary.Binary, outputFilename string) {
+func BuildXml(bin executable.Executable, outputFilename string) {
 	file, _ := os.Create(outputFilename)
 	doc := etree.NewDocument()
 	bin.BuildXml(doc)

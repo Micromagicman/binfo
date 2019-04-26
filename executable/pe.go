@@ -1,4 +1,4 @@
-package binary
+package executable
 
 import (
 	"binfo/util"
@@ -6,8 +6,8 @@ import (
 	pe2 "github.com/mewrev/pe"
 )
 
-type PEBinary struct {
-	BaseBinary
+type PortableExecutable struct {
+	BaseExecutable
 	Architecture      string
 	Addresses         map[string]string
 	Dependencies      []Dependency
@@ -18,11 +18,11 @@ type PEBinary struct {
 	ExportedFunctions []Function
 }
 
-func (bin *PEBinary) GetMagic() string {
+func (bin *PortableExecutable) GetMagic() string {
 	return "0x4D5A"
 }
 
-func (bin *PEBinary) BuildXml(doc *etree.Document) *etree.Element {
+func (bin *PortableExecutable) BuildXml(doc *etree.Document) *etree.Element {
 	root := BuildBaseBinaryInfo(bin, doc)
 	if len(bin.Dependencies) > 0 {
 		dependenciesNode := root.CreateElement("Dependencies")

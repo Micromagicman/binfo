@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"os/exec"
+	"path/filepath"
 	"runtime"
 )
 
@@ -49,6 +50,10 @@ func (e *Executor) ELFInfoCommand(binaryFilePath string) string {
 	return e.RunningCommands["elfinfo"] + " -c " + binaryFilePath
 }
 
+func (e *Executor) TattletaleCommand(binaryFilePath string) string {
+	return e.RunningCommands["tattletale"] + " " + filepath.Dir(binaryFilePath) + " " + e.TemplateDirectory
+}
+
 func ExecutorFactory() *Executor {
 	switch runtime.GOOS {
 		case "windows": return createWindowsExecutor()
@@ -85,6 +90,7 @@ func createWindowsExecutor() *Executor {
 		"elfreader": "call " + winExec.AnalyzersPath + "elfreader.exe",
 		"readelf": "call " + winExec.AnalyzersPath + "readelf.exe",
 		"elfinfo": "call " + winExec.AnalyzersPath + "elfinfo.exe",
+		"tattletale": "java -jar " + winExec.AnalyzersPath + "tattletale1.2.0.jar",
 	}
 	return winExec
 }

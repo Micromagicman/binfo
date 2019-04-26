@@ -1,7 +1,7 @@
 package wrapper
 
 import (
-	"binfo/binary"
+	"binfo/executable"
 	"fmt"
 	"github.com/yalue/elf_reader"
 	"io/ioutil"
@@ -26,9 +26,9 @@ func CreateELFReader(pathToElf string) (*ELFReader, error) {
 	return &ELFReader{elf}, nil
 }
 
-func (er *ELFReader) GetSections() []binary.Section {
+func (er *ELFReader) GetSections() []executable.Section {
 	count := er.File.GetSectionCount()
-	sections := make([]binary.Section, int(count))
+	sections := make([]executable.Section, int(count))
 
 	for i := uint16(1); i < count; i++ {
 		elfSectionHeader, err := er.File.GetSectionHeader(i)
@@ -36,12 +36,12 @@ func (er *ELFReader) GetSections() []binary.Section {
 			continue
 		}
 
-		section := binary.Section{}
+		section := executable.Section{}
 		section.Size = uint64(elfSectionHeader.GetSize())
 		sectionName, err := er.File.GetSectionName(i)
 		if err != nil || sectionName == "" {
 			fmt.Println(sectionName)
-			sectionName = binary.DEFAULT_VALUE
+			sectionName = executable.DEFAULT_VALUE
 		}
 
 		section.Name = sectionName
@@ -52,9 +52,9 @@ func (er *ELFReader) GetSections() []binary.Section {
 	return sections
 }
 
-func (er *ELFReader) GetImportedFunctions() []binary.Function {
+func (er *ELFReader) GetImportedFunctions() []executable.Function {
 	count := er.File.GetSectionCount()
-	functions := []binary.Function{}
+	functions := []executable.Function{}
 
 	for i := uint16(1); i < count; i++ {
 		_, functionNames, err := er.File.GetSymbols(i)
@@ -64,7 +64,7 @@ func (er *ELFReader) GetImportedFunctions() []binary.Function {
 
 		for _, functionName := range functionNames {
 			if functionName != "" && !strings.Contains(functionName, ".") && !strings.Contains(functionName, "@") {
-				functions = append(functions, binary.Function{functionName})
+				functions = append(functions, executable.Function{functionName})
 			}
 		}
 	}

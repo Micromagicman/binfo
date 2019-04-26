@@ -1,18 +1,18 @@
 package dump
 
 import (
-	"binfo/binary"
+	"binfo/executable"
 )
 
 type PEDump struct {
 	BaseDump
 }
 
-func (pd *PEDump) GetImportedFunctions() []binary.Function {
+func (pd *PEDump) GetImportedFunctions() []executable.Function {
 	return pd.functionsByRegex("Function Name \\(Hint\\):\\s+([^\\s]+)")
 }
 
-func (pd *PEDump) GetExportedFunctions() []binary.Function {
+func (pd *PEDump) GetExportedFunctions() []executable.Function {
 	return pd.functionsByRegex("Function Name:\\s+([^\\s]+)")
 }
 
@@ -36,12 +36,12 @@ func (pd *PEDump) GetDataSectionAddress() string {
 	return Group(pd.Find("Base address of data section:\\s+(0x[^\\n]+)"), 1)
 }
 
-func (pd *PEDump) functionsByRegex(regex string) []binary.Function {
+func (pd *PEDump) functionsByRegex(regex string) []executable.Function {
 	functionsMatch := pd.FindAll(regex)
-	functions := make([]binary.Function, len(functionsMatch))
+	functions := make([]executable.Function, len(functionsMatch))
 
 	for index, element := range functionsMatch {
-		functions[index] = binary.Function{Name: Group(element, 1)}
+		functions[index] = executable.Function{Name: Group(element, 1)}
 	}
 
 	return functions

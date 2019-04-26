@@ -1,4 +1,4 @@
-package binary
+package executable
 
 import (
 	"binfo/util"
@@ -11,8 +11,8 @@ const (
 	DEFAULT_VERSION   = "Original ELF"
 )
 
-type ELFBinary struct {
-	BaseBinary
+type ExecutableLinkable struct {
+	BaseExecutable
 	Format            string
 	Endianess         string
 	Version           string
@@ -24,35 +24,35 @@ type ELFBinary struct {
 	Sections          []Section
 }
 
-func (elf *ELFBinary) GetFormat() string {
+func (elf *ExecutableLinkable) GetFormat() string {
 	return util.GetOptionalStringValue(elf.Format, DEFAULT_FORMAT)
 }
 
-func (elf *ELFBinary) GetEndianess() string {
+func (elf *ExecutableLinkable) GetEndianess() string {
 	return util.GetOptionalStringValue(elf.Endianess, DEFAULT_ENDIANESS)
 }
 
-func (elf *ELFBinary) GetVersion() string {
+func (elf *ExecutableLinkable) GetVersion() string {
 	return util.GetOptionalStringValue(elf.Version, DEFAULT_VERSION)
 }
 
-func (elf *ELFBinary) GetSectionCount() string {
+func (elf *ExecutableLinkable) GetSectionCount() string {
 	return util.GetOptionalStringValue("", DEFAULT_VALUE)
 }
 
-func (elf *ELFBinary) GetOperatingSystem() string {
+func (elf *ExecutableLinkable) GetOperatingSystem() string {
 	return util.GetOptionalStringValue(elf.OperatingSystem, DEFAULT_VALUE)
 }
 
-func (elf *ELFBinary) GetType() string {
+func (elf *ExecutableLinkable) GetType() string {
 	return util.GetOptionalStringValue(elf.Type, DEFAULT_VALUE)
 }
 
-func (elf *ELFBinary) GetMagic() string {
+func (elf *ExecutableLinkable) GetMagic() string {
 	return "0x7F454C46 (ELF)"
 }
 
-func (elf *ELFBinary) BuildXml(doc *etree.Document) *etree.Element {
+func (elf *ExecutableLinkable) BuildXml(doc *etree.Document) *etree.Element {
 	root := BuildBaseBinaryInfo(elf, doc)
 	root.AddChild(util.BuildNodeWithText("Format", elf.GetFormat()))
 	root.AddChild(util.BuildNodeWithText("Endianess", elf.GetEndianess()))

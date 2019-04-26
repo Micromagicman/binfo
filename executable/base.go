@@ -1,4 +1,4 @@
-package binary
+package executable
 
 import (
 	"binfo/util"
@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type Binary interface {
+type Executable interface {
 	GetFilename() string
 	GetArchitecture() string
 	GetSize() int64
@@ -58,7 +58,7 @@ func (f *Function) ToXml() *etree.Element {
 	return functionNode
 }
 
-type BaseBinary struct {
+type BaseExecutable struct {
 	Filename string
 	Size int64
 	Architecture string
@@ -68,37 +68,37 @@ type BaseBinary struct {
 	ProgrammingLanguage string
 }
 
-func (bin *BaseBinary) GetFilename() string {
+func (bin *BaseExecutable) GetFilename() string {
 	return util.GetOptionalStringValue(bin.Filename, DEFAULT_VALUE)
 }
 
-func (bin *BaseBinary) GetCompiler() string {
+func (bin *BaseExecutable) GetCompiler() string {
 	return util.GetOptionalStringValue(bin.Compiler, DEFAULT_VALUE)
 }
 
-func (bin *BaseBinary) GetProgrammingLanguage() string {
+func (bin *BaseExecutable) GetProgrammingLanguage() string {
 	return util.GetOptionalStringValue(bin.ProgrammingLanguage, DEFAULT_VALUE)
 }
 
-func (bin *BaseBinary) GetSize() int64 {
+func (bin *BaseExecutable) GetSize() int64 {
 	return bin.Size
 }
 
-func (bin *BaseBinary) GetArchitecture() string {
+func (bin *BaseExecutable) GetArchitecture() string {
 	return util.GetOptionalStringValue(bin.Architecture, DEFAULT_ARCHITECTURE)
 }
 
-func (bin *BaseBinary) GetDMY() string {
+func (bin *BaseExecutable) GetDMY() string {
 	return bin.Time.String()
 }
 
-func (bin *BaseBinary) GetTimestamp() int64 {
+func (bin *BaseExecutable) GetTimestamp() int64 {
 	return bin.Timestamp
 }
 
-func BuildBaseBinaryInfo(bin Binary, doc *etree.Document) *etree.Element {
+func BuildBaseBinaryInfo(bin Executable, doc *etree.Document) *etree.Element {
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
-	root := doc.CreateElement("Binary")
+	root := doc.CreateElement("Executable")
 	root.AddChild(util.BuildNodeWithText("Filename", bin.GetFilename()))
 	root.AddChild(util.BuildNodeWithText("Magic", bin.GetMagic()))
 	root.AddChild(util.BuildNodeWithText("Architecture", bin.GetArchitecture()))

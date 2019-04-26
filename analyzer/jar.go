@@ -1,27 +1,20 @@
 package analyzer
 
 import (
+	"fmt"
 	"github.com/beevik/etree"
-	"github.com/gnewton/jargo"
-	"log"
 	"path/filepath"
 	"strings"
 )
 
-func Jargo(pathToJar string) *jargo.JarInfo {
-	jargoResult, err := jargo.GetJarInfo(pathToJar)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return jargoResult
-}
-
 func (a *Analyzer) JarAnalyzer(pathToJar string) (*etree.Element, error) {
-	jarAnalyzerPath := a.Executor.AnalyzersPath + a.Executor.Sep + "jaranalyzer"
+	jarAnalyzerPath := a.Executor.AnalyzersPath + "jaranalyzer\\"
 	dir := filepath.Dir(pathToJar)
-	_, executeError := a.Executor.Execute(jarAnalyzerPath+a.Executor.Sep+"runxmlsummary.bat "+dir+" "+a.Executor.TemplateDirectory+a.Executor.Sep+"temp.xml")
+	_, executeError := a.Executor.Execute(jarAnalyzerPath+"runxmlsummary.bat "+dir+" "+a.Executor.TemplateDirectory + "temp.xml")
+	fmt.Println(jarAnalyzerPath+"runxmlsummary.bat "+dir+" "+a.Executor.TemplateDirectory + "temp.xml")
 
 	if executeError != nil {
+		fmt.Println(executeError.Error())
 		return nil, executeError
 	}
 

@@ -1,7 +1,7 @@
 package analyzer
 
 import (
-	"binfo/binary"
+	"binfo/executable"
 	"binfo/util"
 	"binfo/wrapper"
 	"binfo/xml"
@@ -11,7 +11,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 const (
@@ -50,7 +49,7 @@ func CreateAnalyzer() *Analyzer {
 	return analyzer
 }
 
-func (a *Analyzer) TryToAnalyze(unknownBinary string) (binary.Binary, error) {
+func (a *Analyzer) TryToAnalyze(unknownBinary string) (executable.Executable, error) {
 	fileDump, err := ioutil.ReadFile(unknownBinary)
 	if err != nil {
 		return nil, err
@@ -70,8 +69,8 @@ func (a *Analyzer) TryToAnalyze(unknownBinary string) (binary.Binary, error) {
 	return nil, nil
 }
 
-func (a *Analyzer) Analyze(pathToBinary string, binaryType int) (binary.Binary, error) {
-	var file binary.Binary
+func (a *Analyzer) Analyze(pathToBinary string, binaryType int) (executable.Executable, error) {
+	var file executable.Executable
 	var err error
 
 	if binaryType == TYPE_EXE {
@@ -91,43 +90,36 @@ func (a *Analyzer) Analyze(pathToBinary string, binaryType int) (binary.Binary, 
 	return file, nil
 }
 
-func (a *Analyzer) Jar(pathToJar string) (*binary.JarBinary, error) {
+func (a *Analyzer) Jar(pathToJar string) (*executable.JarExecutable, error) {
 	fileStat, fileStatError := fileStat(pathToJar)
 	if fileStatError != nil {
 		return nil, fileStatError
 	}
 
-	jargoResult := Jargo(pathToJar)
-	manifest := *jargoResult.Manifest
-
-	jar := new(binary.JarBinary)
-	jar.Architecture = ""
+	jar := new(executable.JarExecutable)
 	jar.Size = fileStat.Size()
 	jar.Filename = pathToJar
 	jar.ProgrammingLanguage = "Java"
-	jar.Dependencies = []binary.Dependency{}
-	jar.Flags = []binary.Flag{}
-	jar.Sections = []*pe.SectHeader{}
-	jar.BuiltBy = manifest["Built-By"]
-	jar.BuildJdk = manifest["Build-Jdk"]
-	jar.CreatedBy = manifest["Created-By"]
-	jar.ManifestVersion = manifest["Manifest-Version"]
-	jar.MainClass = manifest["Main-Class"]
-	jar.ClassPath = strings.Split(manifest["Class-Path"], " ")
-	jarAnalyzerTree, jarAnalyzerError := a.JarAnalyzer(pathToJar)
 
+	tattletale := a.Tattletale(pathToJar)
+	if tattletale != nil {
+		jar.Manifest = tattletale.GetManifest()
+		jar.Requires = tattletale.GetRequires()
+		jar.Provides = tattletale.GetProvides()
+	}
+
+	jarAnalyzerTree, jarAnalyzerError := a.JarAnalyzer(pathToJar)
 	if jarAnalyzerError != nil {
 		log.Println("Cannot analyze file " + pathToJar + " via JarAnalyzer")
 	} else {
 		jar.JarAnalyzerTree = jarAnalyzerTree
-
 	}
 
 	return jar, nil
 }
 
-func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*binary.PEBinary, error) {
-	bin := new(binary.PEBinary)
+func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*executable.PortableExecutable, error) {
+	bin := new(executable.PortableExecutable)
 	objDump := a.ObjDump(pathToBinary, "x")
 	peDumper := a.PEDumper(pathToBinary)
 	peFile, peError := pe.Open(pathToBinary)
@@ -157,13 +149,13 @@ func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*binary.PEBinary, 
 	return bin, nil
 }
 
-func (a *Analyzer) ProcessLinuxBinary(pathToBinary string) (*binary.ELFBinary, error) {
+func (a *Analyzer) ProcessLinuxBinary(pathToBinary string) (*executable.ExecutableLinkable, error) {
 	fileStat, fileStatError := fileStat(pathToBinary)
 	if fileStatError != nil {
 		return nil, fileStatError
 	}
 
-	bin := new(binary.ELFBinary)
+	bin := new(executable.ExecutableLinkable)
 	elfDump := a.ELFReader(pathToBinary)
 
 	bin.Filename = pathToBinary
@@ -234,6 +226,6 @@ func (a *Analyzer) DeleteTemplateDirectory() {
 	util.LogIfError(err, "Error removing template directory")
 }
 
-func (a *Analyzer) SaveResult(bin binary.Binary, outputDirectory string, path string) {
+func (a *Analyzer) SaveResult(bin executable.Executable, outputDirectory string, path string) {
 	xml.BuildXml(bin, outputDirectory + a.Executor.Sep + filepath.Base(path) + ".xml")
 }

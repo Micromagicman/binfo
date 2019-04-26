@@ -12,6 +12,17 @@ import (
 	"time"
 )
 
+var languageToCompiler = map[string][]string {
+	"Golang": {"go", "golang"},
+	"C/C++": {"gcc", "clang"},
+	"Java": {"javac"},
+	"Haskell": {"ghc"},
+	"Rust": {"rust"},
+	"OCaml": {"ocaml"},
+	"Pascal": {"fpc"},
+	"C": {"tcc"},
+}
+
 func BuildNodeWithText(nodeName string, nodeContent string) *etree.Element {
 	node := etree.NewElement(nodeName)
 	node.CreateText(nodeContent)
@@ -47,14 +58,13 @@ func TimestampToTime(timestamp int64) time.Time {
 
 func GetLanguageByCompiler(compilerName string) string {
 	lowerCase := strings.ToLower(compilerName)
-	if strings.Contains(lowerCase, "gcc") {
-		return "C/C++"
+	for lang, compilers := range languageToCompiler {
+		for _, compiler := range compilers {
+			if strings.Contains(lowerCase, compiler) {
+				return lang
+			}
+		}
 	}
-
-	if strings.Contains(lowerCase, "jdk") || strings.Contains(lowerCase, "javac") {
-		return "Java"
-	}
-
 	return "Unknown"
 }
 

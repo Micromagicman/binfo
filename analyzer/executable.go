@@ -2,6 +2,8 @@ package analyzer
 
 import (
 	"binfo/dump"
+	"log"
+	"path/filepath"
 	"strings"
 )
 
@@ -31,4 +33,18 @@ func (a *Analyzer) ELFReader(binaryFilePath string) *dump.ELFReader {
 	elfDump := &dump.ELFReader{}
 	elfDump.Content = string(stdOut)
 	return elfDump
+}
+
+func (a *Analyzer) Tattletale(jarFilePath string) *dump.Tattletale {
+	command := a.Executor.TattletaleCommand(jarFilePath)
+	_, _ = a.Executor.Execute(command)
+	jarHtmlReport := "jar" + a.Executor.Sep + filepath.Base(jarFilePath) + ".html"
+	wrapper, err := dump.CreateTattletaleWrapper(a.Executor.TemplateDirectory + jarHtmlReport)
+
+	if err != nil {
+		log.Println("Cannot analyze " + jarFilePath + " via Tattletale")
+		return nil
+	}
+
+	return wrapper
 }
