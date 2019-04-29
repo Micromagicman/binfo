@@ -39,12 +39,19 @@ const (
 	TYPE_JAR = 20
 )
 
+type Cache struct {
+	Tattletale bool
+	JarAnalyzer bool
+}
+
 type Analyzer struct {
 	Executor *Executor
+	Cache *Cache
 }
 
 func CreateAnalyzer() *Analyzer {
 	analyzer := new(Analyzer)
+	analyzer.Cache = new(Cache)
 	analyzer.Executor = ExecutorFactory()
 	return analyzer
 }
