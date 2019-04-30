@@ -56,8 +56,10 @@ func (e *Executor) TattletaleCommand(binaryFilePath string) string {
 
 func ExecutorFactory() *Executor {
 	switch runtime.GOOS {
-		case "windows": return createWindowsExecutor()
-		default: return createLinuxExecutor()
+	case "windows":
+		return createWindowsExecutor()
+	default:
+		return createLinuxExecutor()
 	}
 }
 
@@ -67,12 +69,13 @@ func createLinuxExecutor() *Executor {
 	linExec.AnalyzersPath = linExec.DefaultWorkingDirectory + "backend/linux/"
 	linExec.TemplateDirectory = linExec.DefaultWorkingDirectory + "temp/"
 	linExec.Sep = "/"
-	linExec.RunningCommands = map[string]string {
-		"objdump": "objdump",
-		"pedumper": linExec.AnalyzersPath + "pedumper",
+	linExec.RunningCommands = map[string]string{
+		"objdump":     "objdump",
+		"pedumper":    linExec.AnalyzersPath + "pedumper",
 		"jaranalyzer": linExec.AnalyzersPath + "jaranalyzer/runxmlsummary",
-		"elfreader": linExec.AnalyzersPath + "elfreader",
-		"readelf": "readelf",
+		"elfreader":   linExec.AnalyzersPath + "elfreader",
+		"readelf":     "readelf",
+		"tattletale":  "java -jar " + linExec.AnalyzersPath + "tattletale1.2.0.jar",
 	}
 	return linExec
 }
@@ -81,16 +84,16 @@ func createWindowsExecutor() *Executor {
 	winExec := new(Executor)
 	winExec.DefaultWorkingDirectory = ".\\"
 	winExec.AnalyzersPath = winExec.DefaultWorkingDirectory + "backend\\windows\\"
-	winExec.TemplateDirectory = winExec.DefaultWorkingDirectory +  "temp\\"
+	winExec.TemplateDirectory = winExec.DefaultWorkingDirectory + "temp\\"
 	winExec.Sep = "\\"
-	winExec.RunningCommands = map[string]string {
-		"objdump": "call " + winExec.AnalyzersPath + "objdump.exe",
-		"pedumper": "call " + winExec.AnalyzersPath + "pedumper.exe",
+	winExec.RunningCommands = map[string]string{
+		"objdump":     "call " + winExec.AnalyzersPath + "objdump.exe",
+		"pedumper":    "call " + winExec.AnalyzersPath + "pedumper.exe",
 		"jaranalyzer": "call " + winExec.AnalyzersPath + "jaranalyzer\\runxmlsummary.bat",
-		"elfreader": "call " + winExec.AnalyzersPath + "elfreader.exe",
-		"readelf": "call " + winExec.AnalyzersPath + "readelf.exe",
-		"elfinfo": "call " + winExec.AnalyzersPath + "elfinfo.exe",
-		"tattletale": "java -jar " + winExec.AnalyzersPath + "tattletale1.2.0.jar",
+		"elfreader":   "call " + winExec.AnalyzersPath + "elfreader.exe",
+		"readelf":     "call " + winExec.AnalyzersPath + "readelf.exe",
+		"elfinfo":     "call " + winExec.AnalyzersPath + "elfinfo.exe",
+		"tattletale":  "java -jar " + winExec.AnalyzersPath + "tattletale1.2.0.jar",
 	}
 	return winExec
 }
