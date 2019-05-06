@@ -2,13 +2,13 @@ package executable
 
 import (
 	"binfo/util"
+
 	"github.com/beevik/etree"
 	pe2 "github.com/mewrev/pe"
 )
 
 type PortableExecutable struct {
 	BaseExecutable
-	Architecture      string
 	Addresses         map[string]string
 	Dependencies      []Dependency
 	Flags             []Flag

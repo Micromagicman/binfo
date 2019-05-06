@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"fmt"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -51,7 +52,12 @@ func (e *Executor) ELFInfoCommand(binaryFilePath string) string {
 }
 
 func (e *Executor) TattletaleCommand(binaryFilePath string) string {
+	fmt.Println(e.RunningCommands["tattletale"] + " " + filepath.Dir(binaryFilePath) + " " + e.TemplateDirectory)
 	return e.RunningCommands["tattletale"] + " " + filepath.Dir(binaryFilePath) + " " + e.TemplateDirectory
+}
+
+func (e *Executor) CDetectCommand(binaryFilePath string) string {
+	return e.RunningCommands["cdetect"] + " " + binaryFilePath
 }
 
 func ExecutorFactory() *Executor {
@@ -70,11 +76,11 @@ func createLinuxExecutor() *Executor {
 	linExec.TemplateDirectory = linExec.DefaultWorkingDirectory + "temp/"
 	linExec.Sep = "/"
 	linExec.RunningCommands = map[string]string{
-		"objdump":     "objdump",
+		"objdump":     "./objdump",
 		"pedumper":    linExec.AnalyzersPath + "pedumper",
 		"jaranalyzer": linExec.AnalyzersPath + "jaranalyzer/runxmlsummary",
 		"elfreader":   linExec.AnalyzersPath + "elfreader",
-		"readelf":     "readelf",
+		"cdetect":     linExec.AnalyzersPath + "cdetect",
 		"tattletale":  "java -jar " + linExec.AnalyzersPath + "tattletale1.2.0.jar",
 	}
 	return linExec
@@ -91,8 +97,7 @@ func createWindowsExecutor() *Executor {
 		"pedumper":    "call " + winExec.AnalyzersPath + "pedumper.exe",
 		"jaranalyzer": "call " + winExec.AnalyzersPath + "jaranalyzer\\runxmlsummary.bat",
 		"elfreader":   "call " + winExec.AnalyzersPath + "elfreader.exe",
-		"readelf":     "call " + winExec.AnalyzersPath + "readelf.exe",
-		"elfinfo":     "call " + winExec.AnalyzersPath + "elfinfo.exe",
+		"cdetect":     "call " + winExec.AnalyzersPath + "cdetect.exe",
 		"tattletale":  "java -jar " + winExec.AnalyzersPath + "tattletale1.2.0.jar",
 	}
 	return winExec

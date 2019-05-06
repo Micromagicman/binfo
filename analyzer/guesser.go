@@ -12,6 +12,6 @@ func hasPESignature(byteDump []byte) bool {
 func hasJarSignature(byteDump []byte) bool {
 	return byteDump[0] == 0x50 && byteDump[1] == 0x4B &&
 		(byteDump[2] == 0x03 && byteDump[3] == 0x04 || // Обычный архив
-		 byteDump[2] == 0x05 && byteDump[3] == 0x06 || // Пустой архив
-		 byteDump[2] == 0x07 && byteDump[3] == 0x08) // Составной архив
+			byteDump[2] == 0x05 && byteDump[3] == 0x06 || // Пустой архив
+			byteDump[2] == 0x07 && byteDump[3] == 0x08) // Составной архив
 }

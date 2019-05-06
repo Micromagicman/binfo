@@ -2,6 +2,7 @@ package executable
 
 import (
 	"binfo/util"
+
 	"github.com/beevik/etree"
 )
 
@@ -79,6 +80,6 @@ func (elf *ExecutableLinkable) BuildXml(doc *etree.Document) *etree.Element {
 			sectionNode.CreateElement("Flags").CreateText(s.Flags)
 		}
 	}
-	
+
 	return root
 }

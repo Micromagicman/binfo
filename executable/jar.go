@@ -2,21 +2,22 @@ package executable
 
 import (
 	"binfo/util"
-	"github.com/beevik/etree"
 	"strings"
+
+	"github.com/beevik/etree"
 )
 
 const (
-	DEFAULT_JAVA_COMPILER    = "Javac"
+	DEFAULT_JAVA_COMPILER = "Javac"
 )
 
 type JarManifest map[string]string
 
 type JarExecutable struct {
 	BaseExecutable
-	Requires     []string
-	Provides     []string
-	Manifest     JarManifest
+	Requires        []string
+	Provides        []string
+	Manifest        JarManifest
 	JarAnalyzerTree *etree.Element
 }
 

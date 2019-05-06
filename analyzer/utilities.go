@@ -3,10 +3,11 @@ package analyzer
 import (
 	"binfo/dump"
 	"fmt"
-	"github.com/beevik/etree"
 	"log"
 	"path/filepath"
 	"strings"
+
+	"github.com/beevik/etree"
 )
 
 func (a *Analyzer) ObjDump(binaryFilePath string, args ...string) *dump.ObjDump {
@@ -37,6 +38,13 @@ func (a *Analyzer) ELFReader(binaryFilePath string) *dump.ELFReader {
 	return elfDump
 }
 
+func (a *Analyzer) CDetect(binaryFilePath string) string {
+	command := a.Executor.CDetectCommand(binaryFilePath)
+	stdOut, _ := a.Executor.Execute(command)
+	fmt.Println(command, string(stdOut))
+	return string(stdOut)
+}
+
 func (a *Analyzer) Tattletale(jarFilePath string) *dump.Tattletale {
 	if !a.Cache.Tattletale {
 		command := a.Executor.TattletaleCommand(jarFilePath)
@@ -57,7 +65,7 @@ func (a *Analyzer) JarAnalyzer(pathToJar string) (*etree.Element, error) {
 	if !a.Cache.JarAnalyzer {
 		jarAnalyzerPath := a.Executor.AnalyzersPath + "jaranalyzer\\"
 		dir := filepath.Dir(pathToJar)
-		_, executeError := a.Executor.Execute(jarAnalyzerPath+"runxmlsummary.bat "+dir+" "+a.Executor.TemplateDirectory + "temp.xml")
+		_, executeError := a.Executor.Execute(jarAnalyzerPath + "runxmlsummary.bat " + dir + " " + a.Executor.TemplateDirectory + "temp.xml")
 
 		if executeError != nil {
 			fmt.Println(executeError.Error())
@@ -67,7 +75,7 @@ func (a *Analyzer) JarAnalyzer(pathToJar string) (*etree.Element, error) {
 		a.Cache.JarAnalyzer = true
 	}
 
-	return getJarFileElement(a.Executor.TemplateDirectory + "temp.xml", pathToJar)
+	return getJarFileElement(a.Executor.TemplateDirectory+"temp.xml", pathToJar)
 }
 
 func getJarFileElement(pathToJarAnalyzerXml string, pathToJar string) (*etree.Element, error) {

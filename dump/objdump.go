@@ -14,7 +14,7 @@ func (od *ObjDump) GetDependencies() []executable.Dependency {
 	dependencies := make([]executable.Dependency, len(depMatches))
 
 	for index, element := range depMatches {
-		dependencies[index] = executable.Dependency{Name: Group(element,1)}
+		dependencies[index] = executable.Dependency{Name: Group(element, 1)}
 	}
 
 	return dependencies
@@ -29,7 +29,7 @@ func (od *ObjDump) GetFlags() []executable.Flag {
 	if len(flagsMatch) == 0 {
 		return []executable.Flag{}
 	}
-	
+
 	flagStrings := strings.Split(Group(flagsMatch[0], 1), ", ")
 	flags := make([]executable.Flag, len(flagStrings))
 

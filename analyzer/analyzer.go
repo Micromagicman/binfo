@@ -6,16 +6,17 @@ import (
 	"binfo/wrapper"
 	"binfo/xml"
 	"fmt"
-	"github.com/mewrev/pe"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/mewrev/pe"
 )
 
 const (
 	TYPE_UNKNOWN = -1
-	TYPE_EXE = 0
+	TYPE_EXE     = 0
 
 	// PE
 	TYPE_DLL = 1
@@ -28,25 +29,25 @@ const (
 	TYPE_LIB = 8
 
 	// ELF
-	TYPE_SO = 10
+	TYPE_SO  = 10
 	TYPE_AXF = 11
 	TYPE_BIN = 12
 	TYPE_ELF = 13
-	TYPE_O = 14
-	TYPE_A = 15
+	TYPE_O   = 14
+	TYPE_A   = 15
 	TYPE_PRX = 16
 
 	TYPE_JAR = 20
 )
 
 type Cache struct {
-	Tattletale bool
+	Tattletale  bool
 	JarAnalyzer bool
 }
 
 type Analyzer struct {
 	Executor *Executor
-	Cache *Cache
+	Cache    *Cache
 }
 
 func CreateAnalyzer() *Analyzer {
@@ -129,14 +130,6 @@ func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*executable.Portab
 	bin := new(executable.PortableExecutable)
 	objDump := a.ObjDump(pathToBinary, "x")
 	peDumper := a.PEDumper(pathToBinary)
-	peFile, peError := pe.Open(pathToBinary)
-
-	if peError == nil {
-		fileHeader, _ := peFile.FileHeader()
-		bin.SectionNumber = fileHeader.NSection
-		sectionHeaders, _ := peFile.SectHeaders()
-		bin.Sections = sectionHeaders
-	}
 
 	bin.Filename = pathToBinary
 	bin.Size = peDumper.GetSize()
@@ -147,6 +140,15 @@ func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*executable.Portab
 	bin.ImportedFunctions = peDumper.GetImportedFunctions()
 	bin.ExportedFunctions = peDumper.GetExportedFunctions()
 	bin.Flags = objDump.GetFlags()
+
+	peFile, peError := pe.Open(pathToBinary)
+	if peError == nil {
+		fileHeader, _ := peFile.FileHeader()
+		bin.SectionNumber = fileHeader.NSection
+		bin.Architecture = fileHeader.Arch.String()
+		sectionHeaders, _ := peFile.SectHeaders()
+		bin.Sections = sectionHeaders
+	}
 
 	bin.Addresses = map[string]string{}
 	bin.Addresses["EntryPoint"] = peDumper.GetEntryPointAddress()
@@ -172,12 +174,8 @@ func (a *Analyzer) ProcessLinuxBinary(pathToBinary string) (*executable.Executab
 	bin.Version = elfDump.GetVersion()
 	bin.Endianess = elfDump.GetEndianess()
 	bin.Type = elfDump.GetType()
-	compilerBytes, elfInfoError := a.Executor.Execute(a.Executor.ELFInfoCommand(pathToBinary))
-
-	if elfInfoError == nil {
-		bin.Compiler = string(compilerBytes)
-		bin.ProgrammingLanguage = util.GetLanguageByCompiler(bin.Compiler)
-	}
+	bin.Compiler = a.CDetect(pathToBinary)
+	bin.ProgrammingLanguage = util.GetLanguageByCompiler(bin.Compiler)
 
 	elfInfo, err := wrapper.CreateELFReader(pathToBinary)
 	if err == nil {
@@ -224,7 +222,7 @@ func (a *Analyzer) InitOutputDirectory(outDir string) {
 		util.LogIfError(err, "Error creating output directory")
 	} else {
 		err := util.ClearDirectory(outDir)
-		util.LogIfError(err,"Error clear output directory")
+		util.LogIfError(err, "Error clear output directory")
 	}
 }
 
@@ -234,5 +232,5 @@ func (a *Analyzer) DeleteTemplateDirectory() {
 }
 
 func (a *Analyzer) SaveResult(bin executable.Executable, outputDirectory string, path string) {
-	xml.BuildXml(bin, outputDirectory + a.Executor.Sep + filepath.Base(path) + ".xml")
+	xml.BuildXml(bin, outputDirectory+a.Executor.Sep+filepath.Base(path)+".xml")
 }

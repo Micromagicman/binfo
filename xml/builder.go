@@ -2,9 +2,10 @@ package xml
 
 import (
 	"binfo/executable"
-	"github.com/beevik/etree"
 	"log"
 	"os"
+
+	"github.com/beevik/etree"
 )
 
 func BuildXml(bin executable.Executable, outputFilename string) {

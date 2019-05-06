@@ -46,13 +46,16 @@ func main() {
 			// попытка проанализировать файл без расширения
 			log.Println("Unknown executable type for file " + path)
 			binFile, err = a.TryToAnalyze(path)
+			if nil == binFile {
+				continue
+			}
 		}
 
 		util.LogIfError(err, "Cannot analyze file "+path)
 		a.SaveResult(binFile, outputPath, path)
 	}
 
-	//a.DeleteTemplateDirectory()
+	a.DeleteTemplateDirectory()
 }
 
 func detectBinaryType(binaryPath string) int {

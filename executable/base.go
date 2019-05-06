@@ -2,8 +2,9 @@ package executable
 
 import (
 	"binfo/util"
-	"github.com/beevik/etree"
 	"time"
+
+	"github.com/beevik/etree"
 )
 
 type Executable interface {
@@ -29,8 +30,8 @@ type XmlBuildable interface {
 }
 
 type Section struct {
-	Name string
-	Size uint64
+	Name  string
+	Size  uint64
 	Flags string
 }
 
@@ -59,12 +60,12 @@ func (f *Function) ToXml() *etree.Element {
 }
 
 type BaseExecutable struct {
-	Filename string
-	Size int64
-	Architecture string
-	Timestamp int64
-	Time time.Time
-	Compiler string
+	Filename            string
+	Size                int64
+	Architecture        string
+	Timestamp           int64
+	Time                time.Time
+	Compiler            string
 	ProgrammingLanguage string
 }
 
@@ -94,6 +95,10 @@ func (bin *BaseExecutable) GetDMY() string {
 
 func (bin *BaseExecutable) GetTimestamp() int64 {
 	return bin.Timestamp
+}
+
+func (bin *BaseExecutable) GetMagic() string {
+	return "Unknown"
 }
 
 func BuildBaseBinaryInfo(bin Executable, doc *etree.Document) *etree.Element {

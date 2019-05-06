@@ -3,9 +3,10 @@ package dump
 import (
 	"binfo/executable"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
 	"os"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 type Tattletale struct {

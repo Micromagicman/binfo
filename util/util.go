@@ -2,7 +2,6 @@ package util
 
 import (
 	"fmt"
-	"github.com/beevik/etree"
 	"io/ioutil"
 	"log"
 	"os"
@@ -10,17 +9,19 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/beevik/etree"
 )
 
-var languageToCompiler = map[string][]string {
-	"Golang": {"go", "golang"},
-	"C/C++": {"gcc", "clang"},
-	"Java": {"javac"},
+var languageToCompiler = map[string][]string{
+	"Golang":  {"go", "golang"},
+	"C/C++":   {"gcc", "clang"},
+	"Java":    {"javac"},
 	"Haskell": {"ghc"},
-	"Rust": {"rust"},
-	"OCaml": {"ocaml"},
-	"Pascal": {"fpc"},
-	"C": {"tcc"},
+	"Rust":    {"rust"},
+	"OCaml":   {"ocaml"},
+	"Pascal":  {"fpc"},
+	"C":       {"tcc"},
 }
 
 func BuildNodeWithText(nodeName string, nodeContent string) *etree.Element {
@@ -128,4 +129,3 @@ func LogIfError(err error, message string) {
 		log.Println(message + ": " + err.Error())
 	}
 }
-
