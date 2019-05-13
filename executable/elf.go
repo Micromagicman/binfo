@@ -2,7 +2,6 @@ package executable
 
 import (
 	"binfo/util"
-
 	"github.com/beevik/etree"
 )
 
@@ -14,15 +13,15 @@ const (
 
 type ExecutableLinkable struct {
 	BaseExecutable
-	Format            string
-	Endianess         string
-	Version           string
-	SectionCount      uint16
-	OperatingSystem   string
-	UnusedBytes       string
-	Type              string
-	ImportedFunctions []Function
-	Sections          []Section
+	ImExporter
+	Format          string
+	Endianess       string
+	Version         string
+	SectionCount    uint16
+	OperatingSystem string
+	UnusedBytes     string
+	Type            string
+	Sections        []Section
 }
 
 func (elf *ExecutableLinkable) GetFormat() string {
@@ -60,14 +59,7 @@ func (elf *ExecutableLinkable) BuildXml(doc *etree.Document) *etree.Element {
 	root.AddChild(util.BuildNodeWithText("ElfVersion", elf.GetVersion()))
 	root.AddChild(util.BuildNodeWithText("OperatingSystem", elf.GetOperatingSystem()))
 	root.AddChild(util.BuildNodeWithText("Type", elf.GetType()))
-
-	if len(elf.ImportedFunctions) > 0 {
-		importedFunctionsNode := root.CreateElement("ImportedFunctions")
-		for _, function := range elf.ImportedFunctions {
-			funcNode := importedFunctionsNode.CreateElement("Function")
-			funcNode.CreateText(function.Name)
-		}
-	}
+	elf.BuildImportsAndExports(root)
 
 	if len(elf.Sections) > 0 {
 		sectionsNode := root.CreateElement("Sections")

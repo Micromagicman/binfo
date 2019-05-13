@@ -2,20 +2,18 @@ package executable
 
 import (
 	"binfo/util"
-
 	"github.com/beevik/etree"
 	pe2 "github.com/mewrev/pe"
 )
 
 type PortableExecutable struct {
 	BaseExecutable
-	Addresses         map[string]string
-	Dependencies      []Dependency
-	Flags             []Flag
-	SectionNumber     uint16
-	Sections          []*pe2.SectHeader
-	ImportedFunctions []Function
-	ExportedFunctions []Function
+	ImExporter
+	Addresses     map[string]string
+	Libraries     []Library
+	Flags         []Flag
+	SectionNumber uint16
+	Sections      []*pe2.SectHeader
 }
 
 func (bin *PortableExecutable) GetMagic() string {
@@ -24,10 +22,10 @@ func (bin *PortableExecutable) GetMagic() string {
 
 func (bin *PortableExecutable) BuildXml(doc *etree.Document) *etree.Element {
 	root := BuildBaseBinaryInfo(bin, doc)
-	if len(bin.Dependencies) > 0 {
-		dependenciesNode := root.CreateElement("Dependencies")
-		for _, dependency := range bin.Dependencies {
-			dependencyNode := dependenciesNode.CreateElement("Dependency")
+	if len(bin.Libraries) > 0 {
+		dependenciesNode := root.CreateElement("Libraries")
+		for _, dependency := range bin.Libraries {
+			dependencyNode := dependenciesNode.CreateElement("Library")
 			dependencyNode.CreateText(dependency.Name)
 		}
 	}
@@ -47,23 +45,7 @@ func (bin *PortableExecutable) BuildXml(doc *etree.Document) *etree.Element {
 		}
 	}
 
-	//root.AddChild(arrayOf("ImportedFunctions", bin.ImportedFunctions))
-	//root.AddChild(arrayOf("ExportedFunction", bin.ExportedFunctions))
-	if len(bin.ImportedFunctions) > 0 {
-		importedFunctionsNode := root.CreateElement("ImportedFunctions")
-		for _, function := range bin.ImportedFunctions {
-			funcNode := importedFunctionsNode.CreateElement("Function")
-			funcNode.CreateText(function.Name)
-		}
-	}
-
-	if len(bin.ExportedFunctions) > 0 {
-		importedFunctionsNode := root.CreateElement("ExportedFunctions")
-		for _, function := range bin.ExportedFunctions {
-			funcNode := importedFunctionsNode.CreateElement("Function")
-			funcNode.CreateText(function.Name)
-		}
-	}
+	bin.BuildImportsAndExports(root)
 
 	if len(bin.Sections) > 0 {
 		sectionsNode := root.CreateElement("Sections")

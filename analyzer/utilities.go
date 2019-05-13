@@ -41,7 +41,6 @@ func (a *Analyzer) ELFReader(binaryFilePath string) *dump.ELFReader {
 func (a *Analyzer) CDetect(binaryFilePath string) string {
 	command := a.Executor.CDetectCommand(binaryFilePath)
 	stdOut, _ := a.Executor.Execute(command)
-	fmt.Println(command, string(stdOut))
 	return string(stdOut)
 }
 

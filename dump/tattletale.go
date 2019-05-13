@@ -2,7 +2,6 @@ package dump
 
 import (
 	"binfo/executable"
-	"fmt"
 	"os"
 	"strings"
 
@@ -14,7 +13,6 @@ type Tattletale struct {
 }
 
 func CreateTattletaleWrapper(pathToHtml string) (*Tattletale, error) {
-	fmt.Println(pathToHtml)
 	tattletaleWrapper := new(Tattletale)
 	htmlReport, err := os.Open(pathToHtml)
 	if err != nil {

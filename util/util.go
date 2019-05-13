@@ -110,7 +110,6 @@ func CheckFileExists(filePath string) bool {
 }
 
 func GetDirectoryFilePaths(directoryPath string) []string {
-	fmt.Println(directoryPath)
 	files, err := ioutil.ReadDir(directoryPath)
 	if err != nil {
 		log.Fatal("Cannot read directory with binaries")

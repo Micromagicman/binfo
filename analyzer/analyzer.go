@@ -6,12 +6,13 @@ import (
 	"binfo/wrapper"
 	"binfo/xml"
 	"fmt"
+	"github.com/H5eye/go-pefile"
+	"github.com/decomp/exp/bin/elf"
+	"github.com/decomp/exp/bin/pe"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-
-	"github.com/mewrev/pe"
 )
 
 const (
@@ -127,35 +128,44 @@ func (a *Analyzer) Jar(pathToJar string) (*executable.JarExecutable, error) {
 }
 
 func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*executable.PortableExecutable, error) {
-	bin := new(executable.PortableExecutable)
+	binFile := new(executable.PortableExecutable)
 	objDump := a.ObjDump(pathToBinary, "x")
 	peDumper := a.PEDumper(pathToBinary)
 
-	bin.Filename = pathToBinary
-	bin.Size = peDumper.GetSize()
-	bin.Timestamp = peDumper.GetTimestamp()
-	bin.Time = util.TimestampToTime(bin.Timestamp)
-	bin.Dependencies = objDump.GetDependencies()
-	bin.Architecture = objDump.GetArchitecture()
-	bin.ImportedFunctions = peDumper.GetImportedFunctions()
-	bin.ExportedFunctions = peDumper.GetExportedFunctions()
-	bin.Flags = objDump.GetFlags()
+	binFile.Filename = pathToBinary
+	binFile.Size = peDumper.GetSize()
+	binFile.Libraries = objDump.GetDependencies()
+	binFile.Architecture = objDump.GetArchitecture()
+	binFile.Flags = objDump.GetFlags()
 
-	peFile, peError := pe.Open(pathToBinary)
-	if peError == nil {
-		fileHeader, _ := peFile.FileHeader()
-		bin.SectionNumber = fileHeader.NSection
-		bin.Architecture = fileHeader.Arch.String()
-		sectionHeaders, _ := peFile.SectHeaders()
-		bin.Sections = sectionHeaders
+	peFile, err := pe.ParseFile(pathToBinary)
+	if err == nil {
+		binFile.Architecture = peFile.Arch.String()
+		binFile.Imports = peFile.Imports
+		binFile.Exports = peFile.Exports
 	}
 
-	bin.Addresses = map[string]string{}
-	bin.Addresses["EntryPoint"] = peDumper.GetEntryPointAddress()
-	bin.Addresses["CodeSection"] = peDumper.GetCodeSectionAddress()
-	bin.Addresses["DataSection"] = peDumper.GetDataSectionAddress()
+	//peFile, peError := pe.Open(pathToBinary)
+	//if peError == nil {
+	//	fileHeader, _ := peFile.FileHeader()
+	//	binFile.SectionNumber = fileHeader.NSection
+	//	binFile.Architecture = fileHeader.Arch.String()
+	//	sectionHeaders, _ := peFile.SectHeaders()
+	//	binFile.Sections = sectionHeaders
+	//}
 
-	return bin, nil
+	peLoad, peError := pefile.Load(pathToBinary)
+	if peError == nil {
+		binFile.Timestamp = int64(peLoad.FileHeader.TimeDateStamp)
+		binFile.Time = util.TimestampToTime(binFile.Timestamp)
+	}
+
+	binFile.Addresses = map[string]string{}
+	binFile.Addresses["EntryPoint"] = peDumper.GetEntryPointAddress()
+	binFile.Addresses["CodeSection"] = peDumper.GetCodeSectionAddress()
+	binFile.Addresses["DataSection"] = peDumper.GetDataSectionAddress()
+
+	return binFile, nil
 }
 
 func (a *Analyzer) ProcessLinuxBinary(pathToBinary string) (*executable.ExecutableLinkable, error) {
@@ -177,10 +187,19 @@ func (a *Analyzer) ProcessLinuxBinary(pathToBinary string) (*executable.Executab
 	bin.Compiler = a.CDetect(pathToBinary)
 	bin.ProgrammingLanguage = util.GetLanguageByCompiler(bin.Compiler)
 
+	elfFile, err := elf.ParseFile(pathToBinary)
+	if err == nil {
+		bin.Architecture = elfFile.Arch.String()
+		bin.Imports = elfFile.Imports
+		bin.Exports = elfFile.Exports
+		for _, s := range elfFile.Sections {
+			fmt.Println(s.FileSize)
+		}
+	}
+
 	elfInfo, err := wrapper.CreateELFReader(pathToBinary)
 	if err == nil {
 		bin.Sections = elfInfo.GetSections()
-		bin.ImportedFunctions = elfInfo.GetImportedFunctions()
 	}
 
 	return bin, nil

@@ -14,6 +14,8 @@ var xmlMap = map[string]string{
 	"timestamp":            "UNIX Timestamp",
 	"dependencies":         "Зависимости",
 	"dependency":           "Зависимость",
+	"libraries":            "Библиотеки",
+	"library":              "Библиотека",
 	"size":                 "Размер файла",
 	"manifest":             "Файл манифеста",
 	"statistics":           "Статистика",

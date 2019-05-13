@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"fmt"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -52,7 +51,6 @@ func (e *Executor) ELFInfoCommand(binaryFilePath string) string {
 }
 
 func (e *Executor) TattletaleCommand(binaryFilePath string) string {
-	fmt.Println(e.RunningCommands["tattletale"] + " " + filepath.Dir(binaryFilePath) + " " + e.TemplateDirectory)
 	return e.RunningCommands["tattletale"] + " " + filepath.Dir(binaryFilePath) + " " + e.TemplateDirectory
 }
 

@@ -2,6 +2,7 @@ package executable
 
 import (
 	"binfo/util"
+	"github.com/decomp/exp/bin"
 	"time"
 
 	"github.com/beevik/etree"
@@ -17,6 +18,11 @@ type Executable interface {
 	GetMagic() string
 	GetProgrammingLanguage() string
 	BuildXml(document *etree.Document) *etree.Element
+}
+
+type ImExporter struct {
+	Imports map[bin.Address]string
+	Exports map[bin.Address]string
 }
 
 const (
@@ -35,7 +41,7 @@ type Section struct {
 	Flags string
 }
 
-type Dependency struct {
+type Library struct {
 	Name string
 }
 
@@ -101,6 +107,15 @@ func (bin *BaseExecutable) GetMagic() string {
 	return "Unknown"
 }
 
+func (bin *ImExporter) BuildImportsAndExports(root *etree.Element) {
+	if len(bin.Imports) > 0 {
+		root.AddChild(buildFunctionList("Imports", bin.Imports))
+	}
+	if len(bin.Exports) > 0 {
+		root.AddChild(buildFunctionList("Exports", bin.Exports))
+	}
+}
+
 func BuildBaseBinaryInfo(bin Executable, doc *etree.Document) *etree.Element {
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 	root := doc.CreateElement("Executable")
@@ -123,4 +138,14 @@ func BuildBaseBinaryInfo(bin Executable, doc *etree.Document) *etree.Element {
 	}
 
 	return root
+}
+
+func buildFunctionList(nameOfList string, list map[bin.Address]string) *etree.Element {
+	listNode := etree.NewElement(nameOfList)
+	for address, name := range list {
+		funcNode := listNode.CreateElement("Function")
+		funcNode.CreateElement("Address").CreateText(address.String())
+		funcNode.CreateElement("Name").CreateText(name)
+	}
+	return listNode
 }

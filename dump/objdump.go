@@ -9,12 +9,12 @@ type ObjDump struct {
 	BaseDump
 }
 
-func (od *ObjDump) GetDependencies() []executable.Dependency {
+func (od *ObjDump) GetDependencies() []executable.Library {
 	depMatches := od.BaseDump.FindAll("DLL Name: (.+?\\.dll)")
-	dependencies := make([]executable.Dependency, len(depMatches))
+	dependencies := make([]executable.Library, len(depMatches))
 
 	for index, element := range depMatches {
-		dependencies[index] = executable.Dependency{Name: Group(element, 1)}
+		dependencies[index] = executable.Library{Name: Group(element, 1)}
 	}
 
 	return dependencies

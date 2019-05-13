@@ -51,14 +51,14 @@ func (jar *JarExecutable) BuildXml(doc *etree.Document) *etree.Element {
 	}
 
 	if len(jar.Requires) > 0 {
-		requiresNode := root.CreateElement("Requires")
+		requiresNode := root.CreateElement("Imports")
 		for _, r := range jar.Requires {
 			requiresNode.AddChild(util.BuildNodeWithText("Class", r))
 		}
 	}
 
 	if len(jar.Provides) > 0 {
-		requiresNode := root.CreateElement("Provides")
+		requiresNode := root.CreateElement("Exports")
 		for _, p := range jar.Provides {
 			requiresNode.AddChild(util.BuildNodeWithText("Class", p))
 		}
