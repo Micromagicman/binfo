@@ -45,6 +45,13 @@ var xmlMap = map[string]string{
 	"mainclass":            "Главный класс",
 	"requires":             "Требования",
 	"provides":             "Предоставляет",
+	"osversion":            "Версия операционной системы",
+	"linkerversion":        "Версия компоновщика",
+	"checksum":             "контрольная сумма",
+	"coderva":              "RVA начала кода программы (секции кода)",
+	"codesize":             "Размер секции кода",
+	"datarva":              "RVA начала кода программы (секции данных)",
+	"datasize":             "Размер секции данных",
 }
 
 func Translate(tagName string) string {

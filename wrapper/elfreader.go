@@ -10,7 +10,7 @@ type ELFReader struct {
 	File elf_reader.ELFFile
 }
 
-func CreateELFReader(pathToElf string) (*ELFReader, error) {
+func CreateELFReaderWrapper(pathToElf string) (*ELFReader, error) {
 	raw, e := ioutil.ReadFile(pathToElf)
 	if e != nil {
 		return nil, e
@@ -24,7 +24,11 @@ func CreateELFReader(pathToElf string) (*ELFReader, error) {
 	return &ELFReader{elf}, nil
 }
 
-func (er *ELFReader) GetSections() []executable.Section {
+func (er *ELFReader) Process(bin *executable.ExecutableLinkable) {
+	bin.Sections = er.getSections()
+}
+
+func (er *ELFReader) getSections() []executable.Section {
 	count := er.File.GetSectionCount()
 	sections := make([]executable.Section, int(count))
 

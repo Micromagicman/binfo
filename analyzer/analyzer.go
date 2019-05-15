@@ -48,6 +48,7 @@ type Cache struct {
 
 type Analyzer struct {
 	Executor *Executor
+	CompilerDetector *CompilerDetector
 	Cache    *Cache
 }
 
@@ -55,6 +56,7 @@ func CreateAnalyzer() *Analyzer {
 	analyzer := new(Analyzer)
 	analyzer.Cache = new(Cache)
 	analyzer.Executor = ExecutorFactory()
+	analyzer.CompilerDetector = CreateDetector("backend" + analyzer.Executor.Sep + "compiler_signatures.txt")
 	return analyzer
 }
 
@@ -128,15 +130,21 @@ func (a *Analyzer) Jar(pathToJar string) (*executable.JarExecutable, error) {
 }
 
 func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*executable.PortableExecutable, error) {
+	fileStat, fileStatError := fileStat(pathToBinary)
+	if fileStatError != nil {
+		return nil, fileStatError
+	}
+
 	binFile := new(executable.PortableExecutable)
 	objDump := a.ObjDump(pathToBinary, "x")
-	peDumper := a.PEDumper(pathToBinary)
 
+	binFile.Size = fileStat.Size()
 	binFile.Filename = pathToBinary
-	binFile.Size = peDumper.GetSize()
 	binFile.Libraries = objDump.GetDependencies()
 	binFile.Architecture = objDump.GetArchitecture()
 	binFile.Flags = objDump.GetFlags()
+	binFile.Compiler = a.CompilerDetector.Detect(pathToBinary)
+	binFile.ProgrammingLanguage = util.GetLanguageByCompiler(binFile.Compiler)
 
 	peFile, err := pe.ParseFile(pathToBinary)
 	if err == nil {
@@ -145,25 +153,18 @@ func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*executable.Portab
 		binFile.Exports = peFile.Exports
 	}
 
-	//peFile, peError := pe.Open(pathToBinary)
-	//if peError == nil {
-	//	fileHeader, _ := peFile.FileHeader()
-	//	binFile.SectionNumber = fileHeader.NSection
-	//	binFile.Architecture = fileHeader.Arch.String()
-	//	sectionHeaders, _ := peFile.SectHeaders()
-	//	binFile.Sections = sectionHeaders
-	//}
+	memrevPE, err := wrapper.CreateMemrevPEWrapper(pathToBinary)
+	if err != nil {
+		log.Println("Cannot analyze " + pathToBinary + " via memrew/pe library")
+	} else {
+		memrevPE.Process(binFile)
+	}
 
 	peLoad, peError := pefile.Load(pathToBinary)
 	if peError == nil {
 		binFile.Timestamp = int64(peLoad.FileHeader.TimeDateStamp)
 		binFile.Time = util.TimestampToTime(binFile.Timestamp)
 	}
-
-	binFile.Addresses = map[string]string{}
-	binFile.Addresses["EntryPoint"] = peDumper.GetEntryPointAddress()
-	binFile.Addresses["CodeSection"] = peDumper.GetCodeSectionAddress()
-	binFile.Addresses["DataSection"] = peDumper.GetDataSectionAddress()
 
 	return binFile, nil
 }
@@ -197,9 +198,11 @@ func (a *Analyzer) ProcessLinuxBinary(pathToBinary string) (*executable.Executab
 		}
 	}
 
-	elfInfo, err := wrapper.CreateELFReader(pathToBinary)
-	if err == nil {
-		bin.Sections = elfInfo.GetSections()
+	elfInfo, err := wrapper.CreateELFReaderWrapper(pathToBinary)
+	if err != nil {
+		log.Println("Cannot analyze " + pathToBinary + " via ELFReader")
+	} else {
+		elfInfo.Process(bin)
 	}
 
 	return bin, nil

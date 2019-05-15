@@ -131,10 +131,15 @@ func BuildBaseBinaryInfo(bin Executable, doc *etree.Document) *etree.Element {
 		sizeNode.CreateText(util.Int64ToString(bin.GetSize()))
 	}
 
+	dateNode := root.CreateElement("CompileTime")
+	unixTimeNode := dateNode.CreateElement("Unix")
+	dateTimeNode := dateNode.CreateElement("DateTime")
 	if bin.GetTimestamp() > 0 {
-		dateNode := root.CreateElement("CompilationDate")
-		dateNode.CreateElement("Timestamp").CreateText(util.Int64ToString(bin.GetTimestamp()))
-		dateNode.CreateElement("Date").CreateText(bin.GetDMY())
+		unixTimeNode.CreateText(util.Int64ToString(bin.GetTimestamp()))
+		dateTimeNode.CreateText(bin.GetDMY())
+	} else {
+		unixTimeNode.CreateText(DEFAULT_VALUE)
+		dateTimeNode.CreateText(DEFAULT_VALUE)
 	}
 
 	return root
@@ -148,4 +153,11 @@ func buildFunctionList(nameOfList string, list map[bin.Address]string) *etree.El
 		funcNode.CreateElement("Name").CreateText(name)
 	}
 	return listNode
+}
+
+func buildSizeTag(name string, value string) *etree.Element {
+	sizeTag := etree.NewElement(name)
+	sizeTag.CreateAttr("unit", "bytes")
+	sizeTag.CreateText(value)
+	return sizeTag
 }

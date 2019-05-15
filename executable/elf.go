@@ -66,9 +66,7 @@ func (elf *ExecutableLinkable) BuildXml(doc *etree.Document) *etree.Element {
 		for _, s := range elf.Sections {
 			sectionNode := sectionsNode.CreateElement("Section")
 			sectionNode.CreateElement("Name").CreateText(s.Name)
-			sizeNode := sectionNode.CreateElement("Size")
-			sizeNode.CreateAttr("unit", "bytes")
-			sizeNode.CreateText(util.UInt64ToString(s.Size))
+			sectionNode.AddChild(buildSizeTag("Size", util.UInt64ToString(s.Size)))
 			sectionNode.CreateElement("Flags").CreateText(s.Flags)
 		}
 	}

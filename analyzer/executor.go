@@ -75,7 +75,6 @@ func createLinuxExecutor() *Executor {
 	linExec.Sep = "/"
 	linExec.RunningCommands = map[string]string{
 		"objdump":     "./objdump",
-		"pedumper":    linExec.AnalyzersPath + "pedumper",
 		"jaranalyzer": linExec.AnalyzersPath + "jaranalyzer/runxmlsummary",
 		"elfreader":   linExec.AnalyzersPath + "elfreader",
 		"cdetect":     linExec.AnalyzersPath + "cdetect",
@@ -92,7 +91,6 @@ func createWindowsExecutor() *Executor {
 	winExec.Sep = "\\"
 	winExec.RunningCommands = map[string]string{
 		"objdump":     "call " + winExec.AnalyzersPath + "objdump.exe",
-		"pedumper":    "call " + winExec.AnalyzersPath + "pedumper.exe",
 		"jaranalyzer": "call " + winExec.AnalyzersPath + "jaranalyzer\\runxmlsummary.bat",
 		"elfreader":   "call " + winExec.AnalyzersPath + "elfreader.exe",
 		"cdetect":     "call " + winExec.AnalyzersPath + "cdetect.exe",

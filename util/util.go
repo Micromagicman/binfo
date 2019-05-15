@@ -15,13 +15,14 @@ import (
 
 var languageToCompiler = map[string][]string{
 	"Golang":  {"go", "golang"},
-	"C/C++":   {"gcc", "clang"},
+	"C/C++":   {"gcc", "clang", "visual c++", "borland c++", "mingw"},
 	"Java":    {"javac"},
 	"Haskell": {"ghc"},
 	"Rust":    {"rust"},
 	"OCaml":   {"ocaml"},
 	"Pascal":  {"fpc"},
 	"C":       {"tcc"},
+	"Delphi":  {"borland delphi"},
 }
 
 func BuildNodeWithText(nodeName string, nodeContent string) *etree.Element {
@@ -49,8 +50,8 @@ func Uint32ToString(intValue uint32) string {
 	return fmt.Sprint(intValue)
 }
 
-func IntToString(intValue int) string {
-	return strconv.Itoa(intValue)
+func Int64ToHex(intValue int64) string {
+	return "0x" + strconv.FormatInt(intValue, 16)
 }
 
 func TimestampToTime(timestamp int64) time.Time {

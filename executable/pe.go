@@ -9,11 +9,25 @@ import (
 type PortableExecutable struct {
 	BaseExecutable
 	ImExporter
-	Addresses     map[string]string
 	Libraries     []Library
 	Flags         []Flag
 	SectionNumber uint16
 	Sections      []*pe2.SectHeader
+	LinkerVersion string
+	OsVersion     string
+	Checksum      string
+	CodeRVA       string
+	CodeSize      string
+	DataRVA       string
+	DataSize      string
+}
+
+func (bin *PortableExecutable) GetOsVersion() string {
+	return util.GetOptionalStringValue(bin.OsVersion, DEFAULT_VALUE)
+}
+
+func (bin *PortableExecutable) GetLinkerVersion() string {
+	return util.GetOptionalStringValue(bin.LinkerVersion, DEFAULT_VALUE)
 }
 
 func (bin *PortableExecutable) GetMagic() string {
@@ -22,6 +36,20 @@ func (bin *PortableExecutable) GetMagic() string {
 
 func (bin *PortableExecutable) BuildXml(doc *etree.Document) *etree.Element {
 	root := BuildBaseBinaryInfo(bin, doc)
+
+	root.CreateElement("OsVersion").
+		CreateText(bin.GetOsVersion())
+	root.CreateElement("LinkerVersion").
+		CreateText(bin.GetLinkerVersion())
+	root.CreateElement("Checksum").
+		CreateText(bin.Checksum)
+	root.CreateElement("CodeRVA").
+		CreateText(bin.CodeRVA)
+	root.AddChild(buildSizeTag("CodeSize", bin.CodeSize))
+	root.CreateElement("DataRVA").
+		CreateText(bin.DataRVA)
+	root.AddChild(buildSizeTag("DataSize", bin.DataSize))
+
 	if len(bin.Libraries) > 0 {
 		dependenciesNode := root.CreateElement("Libraries")
 		for _, dependency := range bin.Libraries {
@@ -38,24 +66,17 @@ func (bin *PortableExecutable) BuildXml(doc *etree.Document) *etree.Element {
 		}
 	}
 
-	if len(bin.Addresses) > 0 {
-		addressesNode := root.CreateElement("Addresses")
-		for name, address := range bin.Addresses {
-			addressesNode.AddChild(util.BuildNodeWithText(name, address))
-		}
-	}
-
 	bin.BuildImportsAndExports(root)
 
 	if len(bin.Sections) > 0 {
 		sectionsNode := root.CreateElement("Sections")
 		for _, section := range bin.Sections {
 			sectionNode := sectionsNode.CreateElement("Section")
-			sectionNode.CreateElement("Name").CreateText(section.Name)
-			sizeNode := sectionNode.CreateElement("Size")
-			sizeNode.CreateAttr("unit", "bytes")
-			sizeNode.CreateText(util.Uint32ToString(section.Size))
-			sectionNode.CreateElement("Flags").CreateText(section.Flags.String())
+			sectionNode.CreateElement("Name").
+				CreateText(util.GetOptionalStringValue(section.Name, DEFAULT_VALUE))
+			sectionNode.AddChild(buildSizeTag("Size", util.Uint32ToString(section.Size)))
+			sectionNode.CreateElement("Flags").
+				CreateText(section.Flags.String())
 		}
 	}
 
