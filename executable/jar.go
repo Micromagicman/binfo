@@ -21,6 +21,10 @@ type JarExecutable struct {
 	JarAnalyzerTree *etree.Element
 }
 
+func (jar *JarExecutable) GetType() string {
+	return "JAR Archive"
+}
+
 func (jar *JarExecutable) GetCompiler() string {
 	return util.GetOptionalStringValue(jar.Compiler, DEFAULT_JAVA_COMPILER)
 }

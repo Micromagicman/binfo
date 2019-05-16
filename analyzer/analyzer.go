@@ -109,7 +109,7 @@ func (a *Analyzer) Jar(pathToJar string) (*executable.JarExecutable, error) {
 
 	jar := new(executable.JarExecutable)
 	jar.Size = fileStat.Size()
-	jar.Filename = pathToJar
+	jar.Filename, _ = filepath.Abs(pathToJar)
 	jar.ProgrammingLanguage = "Java"
 
 	tattletale := a.Tattletale(pathToJar)
@@ -129,47 +129,47 @@ func (a *Analyzer) Jar(pathToJar string) (*executable.JarExecutable, error) {
 	return jar, nil
 }
 
-func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*executable.PortableExecutable, error) {
-	fileStat, fileStatError := fileStat(pathToBinary)
+func (a *Analyzer) ProcessWindowsBinary(pathToExecutable string) (*executable.PortableExecutable, error) {
+	fileStat, fileStatError := fileStat(pathToExecutable)
 	if fileStatError != nil {
 		return nil, fileStatError
 	}
 
 	binFile := new(executable.PortableExecutable)
-	objDump := a.ObjDump(pathToBinary, "x")
+	objDump := a.ObjDump(pathToExecutable, "x")
 
 	binFile.Size = fileStat.Size()
-	binFile.Filename, _ = filepath.Abs(pathToBinary)
+	binFile.Filename, _ = filepath.Abs(pathToExecutable)
 	binFile.Architecture = objDump.GetArchitecture()
 	binFile.Flags = objDump.GetFlags()
-	binFile.Compiler = a.CompilerDetector.Detect(pathToBinary)
+	binFile.Compiler = a.CompilerDetector.Detect(pathToExecutable)
 	binFile.ProgrammingLanguage = util.GetLanguageByCompiler(binFile.Compiler)
 
-	debugPe, err := wrapper.CreateDebugPeWrapper(pathToBinary)
+	debugPe, err := wrapper.CreateDebugPeWrapper(pathToExecutable)
 	if err != nil {
-		log.Println("Cannot analyze " + pathToBinary + " via decomp/exp/bin/pe library")
+		log.Println("Cannot analyze " + pathToExecutable + " via decomp/exp/bin/pe library")
 	} else {
 		debugPe.Process(binFile)
 	}
 
-	peFile, err := pe.ParseFile(pathToBinary)
+	peFile, err := pe.ParseFile(pathToExecutable)
 	if err != nil {
-		log.Println("Cannot analyze " + pathToBinary + " via decomp/exp/bin/pe library")
+		log.Println("Cannot analyze " + pathToExecutable + " via decomp/exp/bin/pe library")
 	} else {
 		binFile.Architecture = peFile.Arch.String()
 		binFile.Exports = peFile.Exports
 	}
 
-	memrevPE, err := wrapper.CreateMemrevPEWrapper(pathToBinary)
+	memrevPE, err := wrapper.CreateMemrevPEWrapper(pathToExecutable)
 	if err != nil {
-		log.Println("Cannot analyze " + pathToBinary + " via memrew/pe library")
+		log.Println("Cannot analyze " + pathToExecutable + " via memrew/pe library")
 	} else {
 		memrevPE.Process(binFile)
 	}
 
-	peLoad, peError := pefile.Load(pathToBinary)
+	peLoad, peError := pefile.Load(pathToExecutable)
 	if peError != nil {
-		log.Println("Cannot analyze " + pathToBinary + " via H5eye/go-pefile library")
+		log.Println("Cannot analyze " + pathToExecutable + " via H5eye/go-pefile library")
 	} else {
 		binFile.Timestamp = int64(peLoad.FileHeader.TimeDateStamp)
 		binFile.Time = util.TimestampToTime(binFile.Timestamp)
@@ -178,44 +178,43 @@ func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*executable.Portab
 	return binFile, nil
 }
 
-func (a *Analyzer) ProcessLinuxBinary(pathToBinary string) (*executable.ExecutableLinkable, error) {
-	fileStat, fileStatError := fileStat(pathToBinary)
+func (a *Analyzer) ProcessLinuxBinary(pathToExecutable string) (*executable.ExecutableLinkable, error) {
+	fileStat, fileStatError := fileStat(pathToExecutable)
 	if fileStatError != nil {
 		return nil, fileStatError
 	}
 
 	bin := new(executable.ExecutableLinkable)
-	elfDump := a.ELFReader(pathToBinary)
+	elfDump := a.ELFReader(pathToExecutable)
 
-	bin.Filename = pathToBinary
+	bin.Filename, _ = filepath.Abs(pathToExecutable)
 	bin.OperatingSystem = elfDump.GetOperatingSystem()
 	bin.Size = fileStat.Size()
 	bin.Format = elfDump.GetFormat()
 	bin.Version = elfDump.GetVersion()
 	bin.Endianess = elfDump.GetEndianess()
-	bin.Type = elfDump.GetType()
-	bin.Compiler = a.CDetect(pathToBinary)
+	bin.Compiler = a.CDetect(pathToExecutable)
 	bin.ProgrammingLanguage = util.GetLanguageByCompiler(bin.Compiler)
 
-	elfFile, err := elf.ParseFile(pathToBinary)
+	elfFile, err := elf.ParseFile(pathToExecutable)
 	if err != nil {
-		log.Println("Cannot analyze " + pathToBinary + " via decomp/exp/bin/elf library")
+		log.Println("Cannot analyze " + pathToExecutable + " via decomp/exp/bin/elf library")
 	} else {
 		bin.Architecture = elfFile.Arch.String()
 		//bin.Imports = elfFile.Imports
 		bin.Exports = elfFile.Exports
 	}
 
-	elfInfo, err := wrapper.CreateELFReaderWrapper(pathToBinary)
+	elfInfo, err := wrapper.CreateELFReaderWrapper(pathToExecutable)
 	if err != nil {
-		log.Println("Cannot analyze " + pathToBinary + " via ELFReader")
+		log.Println("Cannot analyze " + pathToExecutable + " via ELFReader")
 	} else {
 		elfInfo.Process(bin)
 	}
 
-	debugElf, err := wrapper.CreateDebugElfWrapper(pathToBinary)
+	debugElf, err := wrapper.CreateDebugElfWrapper(pathToExecutable)
 	if err != nil {
-		log.Println("Cannot analyze " + pathToBinary + " via ELFReader")
+		log.Println("Cannot analyze " + pathToExecutable + " via ELFReader")
 	} else {
 		debugElf.Process(bin)
 	}

@@ -3,6 +3,7 @@ package executable
 import (
 	"binfo/util"
 	"github.com/decomp/exp/bin"
+	"github.com/fatih/set"
 	"time"
 
 	"github.com/beevik/etree"
@@ -15,6 +16,7 @@ type Executable interface {
 	GetTimestamp() int64
 	GetDMY() string
 	GetCompiler() string
+	GetType() string
 	GetMagic() string
 	GetProgrammingLanguage() string
 	BuildXml(document *etree.Document) *etree.Element
@@ -127,6 +129,7 @@ func BuildBaseBinaryInfo(bin Executable, doc *etree.Document) *etree.Element {
 	root := doc.CreateElement("Executable")
 	root.AddChild(util.BuildNodeWithText("Filename", bin.GetFilename()))
 	root.AddChild(util.BuildNodeWithText("Magic", bin.GetMagic()))
+	root.AddChild(util.BuildNodeWithText("Type", bin.GetType()))
 	root.AddChild(util.BuildNodeWithText("Architecture", bin.GetArchitecture()))
 	root.AddChild(util.BuildNodeWithText("Compiler", bin.GetCompiler()))
 	root.AddChild(util.BuildNodeWithText("ProgrammingLanguage", bin.GetProgrammingLanguage()))
@@ -149,6 +152,18 @@ func BuildBaseBinaryInfo(bin Executable, doc *etree.Document) *etree.Element {
 	}
 
 	return root
+}
+
+func buildLibraries(s set.Interface) *etree.Element {
+	dependenciesNode := etree.NewElement("Libraries")
+	for _, dependency := range s.List() {
+		name := dependency.(string)
+		if "" != name {
+			dependencyNode := dependenciesNode.CreateElement("Library")
+			dependencyNode.CreateText(name)
+		}
+	}
+	return dependenciesNode
 }
 
 func buildSizeTag(name string, value string) *etree.Element {

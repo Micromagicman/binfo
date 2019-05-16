@@ -22,8 +22,11 @@ type ExecutableLinkable struct {
 	SectionCount    uint16
 	OperatingSystem string
 	UnusedBytes     string
-	Type            string
 	Sections        []Section
+}
+
+func (elf *ExecutableLinkable) GetType() string {
+	return "Executable Linkable"
 }
 
 func (elf *ExecutableLinkable) GetFormat() string {
@@ -46,10 +49,6 @@ func (elf *ExecutableLinkable) GetOperatingSystem() string {
 	return util.GetOptionalStringValue(elf.OperatingSystem, DEFAULT_VALUE)
 }
 
-func (elf *ExecutableLinkable) GetType() string {
-	return util.GetOptionalStringValue(elf.Type, DEFAULT_VALUE)
-}
-
 func (elf *ExecutableLinkable) GetMagic() string {
 	return "0x7F454C46 (ELF)"
 }
@@ -63,11 +62,7 @@ func (elf *ExecutableLinkable) BuildXml(doc *etree.Document) *etree.Element {
 	root.AddChild(util.BuildNodeWithText("Type", elf.GetType()))
 
 	if elf.Libraries.Size() > 0 {
-		dependenciesNode := root.CreateElement("Libraries")
-		for _, dependency := range elf.Libraries.List() {
-			dependencyNode := dependenciesNode.CreateElement("Library")
-			dependencyNode.CreateText(dependency.(string))
-		}
+		root.AddChild(buildLibraries(elf.Libraries))
 	}
 
 	elf.BuildImportsAndExports(root)

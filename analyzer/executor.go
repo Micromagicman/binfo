@@ -74,7 +74,7 @@ func createLinuxExecutor() *Executor {
 	linExec.TemplateDirectory = linExec.DefaultWorkingDirectory + "temp/"
 	linExec.Sep = "/"
 	linExec.RunningCommands = map[string]string{
-		"objdump":     "./objdump",
+		"objdump":     linExec.AnalyzersPath + "objdump",
 		"jaranalyzer": linExec.AnalyzersPath + "jaranalyzer/runxmlsummary",
 		"elfreader":   linExec.AnalyzersPath + "elfreader",
 		"cdetect":     linExec.AnalyzersPath + "cdetect",
