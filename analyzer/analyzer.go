@@ -139,17 +139,24 @@ func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*executable.Portab
 	objDump := a.ObjDump(pathToBinary, "x")
 
 	binFile.Size = fileStat.Size()
-	binFile.Filename = pathToBinary
-	binFile.Libraries = objDump.GetDependencies()
+	binFile.Filename, _ = filepath.Abs(pathToBinary)
 	binFile.Architecture = objDump.GetArchitecture()
 	binFile.Flags = objDump.GetFlags()
 	binFile.Compiler = a.CompilerDetector.Detect(pathToBinary)
 	binFile.ProgrammingLanguage = util.GetLanguageByCompiler(binFile.Compiler)
 
+	debugPe, err := wrapper.CreateDebugPeWrapper(pathToBinary)
+	if err != nil {
+		log.Println("Cannot analyze " + pathToBinary + " via decomp/exp/bin/pe library")
+	} else {
+		debugPe.Process(binFile)
+	}
+
 	peFile, err := pe.ParseFile(pathToBinary)
-	if err == nil {
+	if err != nil {
+		log.Println("Cannot analyze " + pathToBinary + " via decomp/exp/bin/pe library")
+	} else {
 		binFile.Architecture = peFile.Arch.String()
-		binFile.Imports = peFile.Imports
 		binFile.Exports = peFile.Exports
 	}
 
@@ -161,7 +168,9 @@ func (a *Analyzer) ProcessWindowsBinary(pathToBinary string) (*executable.Portab
 	}
 
 	peLoad, peError := pefile.Load(pathToBinary)
-	if peError == nil {
+	if peError != nil {
+		log.Println("Cannot analyze " + pathToBinary + " via H5eye/go-pefile library")
+	} else {
 		binFile.Timestamp = int64(peLoad.FileHeader.TimeDateStamp)
 		binFile.Time = util.TimestampToTime(binFile.Timestamp)
 	}
@@ -189,13 +198,12 @@ func (a *Analyzer) ProcessLinuxBinary(pathToBinary string) (*executable.Executab
 	bin.ProgrammingLanguage = util.GetLanguageByCompiler(bin.Compiler)
 
 	elfFile, err := elf.ParseFile(pathToBinary)
-	if err == nil {
+	if err != nil {
+		log.Println("Cannot analyze " + pathToBinary + " via decomp/exp/bin/elf library")
+	} else {
 		bin.Architecture = elfFile.Arch.String()
-		bin.Imports = elfFile.Imports
+		//bin.Imports = elfFile.Imports
 		bin.Exports = elfFile.Exports
-		for _, s := range elfFile.Sections {
-			fmt.Println(s.FileSize)
-		}
 	}
 
 	elfInfo, err := wrapper.CreateELFReaderWrapper(pathToBinary)
@@ -203,6 +211,13 @@ func (a *Analyzer) ProcessLinuxBinary(pathToBinary string) (*executable.Executab
 		log.Println("Cannot analyze " + pathToBinary + " via ELFReader")
 	} else {
 		elfInfo.Process(bin)
+	}
+
+	debugElf, err := wrapper.CreateDebugElfWrapper(pathToBinary)
+	if err != nil {
+		log.Println("Cannot analyze " + pathToBinary + " via ELFReader")
+	} else {
+		debugElf.Process(bin)
 	}
 
 	return bin, nil

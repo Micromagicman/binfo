@@ -3,13 +3,14 @@ package executable
 import (
 	"binfo/util"
 	"github.com/beevik/etree"
+	"github.com/fatih/set"
 	pe2 "github.com/mewrev/pe"
 )
 
 type PortableExecutable struct {
 	BaseExecutable
 	ImExporter
-	Libraries     []Library
+	Libraries     set.Interface
 	Flags         []Flag
 	SectionNumber uint16
 	Sections      []*pe2.SectHeader
@@ -50,11 +51,11 @@ func (bin *PortableExecutable) BuildXml(doc *etree.Document) *etree.Element {
 		CreateText(bin.DataRVA)
 	root.AddChild(buildSizeTag("DataSize", bin.DataSize))
 
-	if len(bin.Libraries) > 0 {
+	if bin.Libraries.Size() > 0 {
 		dependenciesNode := root.CreateElement("Libraries")
-		for _, dependency := range bin.Libraries {
+		for _, dependency := range bin.Libraries.List() {
 			dependencyNode := dependenciesNode.CreateElement("Library")
-			dependencyNode.CreateText(dependency.Name)
+			dependencyNode.CreateText(dependency.(string))
 		}
 	}
 

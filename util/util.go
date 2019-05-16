@@ -129,3 +129,19 @@ func LogIfError(err error, message string) {
 		log.Println(message + ": " + err.Error())
 	}
 }
+
+func StringInSlice(el string, list []string) bool {
+	for _, item := range list {
+		if item == el {
+			return true
+		}
+	}
+	return false
+}
+
+func AppendIfNotExists(el string, list[]string) []string {
+	if !StringInSlice(el, list) {
+		list = append(list, el)
+	}
+	return list
+}

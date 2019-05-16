@@ -2,12 +2,12 @@ package analyzer
 
 import (
 	"binfo/dump"
+	"binfo/wrapper"
 	"fmt"
+	"github.com/beevik/etree"
 	"log"
 	"path/filepath"
 	"strings"
-
-	"github.com/beevik/etree"
 )
 
 func (a *Analyzer) ObjDump(binaryFilePath string, args ...string) *dump.ObjDump {
@@ -18,15 +18,6 @@ func (a *Analyzer) ObjDump(binaryFilePath string, args ...string) *dump.ObjDump 
 	objDump := &dump.ObjDump{}
 	objDump.Content = string(stdOut)
 	return objDump
-}
-
-func (a *Analyzer) PEDumper(binaryFilePath string) *dump.PEDump {
-	command := a.Executor.PEDumperCommand(binaryFilePath)
-	stdOut, _ := a.Executor.Execute(command)
-
-	peDump := &dump.PEDump{}
-	peDump.Content = string(stdOut)
-	return peDump
 }
 
 func (a *Analyzer) ELFReader(binaryFilePath string) *dump.ELFReader {
@@ -44,14 +35,14 @@ func (a *Analyzer) CDetect(binaryFilePath string) string {
 	return string(stdOut)
 }
 
-func (a *Analyzer) Tattletale(jarFilePath string) *dump.Tattletale {
+func (a *Analyzer) Tattletale(jarFilePath string) *wrapper.Tattletale {
 	if !a.Cache.Tattletale {
 		command := a.Executor.TattletaleCommand(jarFilePath)
 		_, _ = a.Executor.Execute(command)
 		a.Cache.Tattletale = true
 	}
 	jarHtmlReport := "jar" + a.Executor.Sep + filepath.Base(jarFilePath) + ".html"
-	wrapper, err := dump.CreateTattletaleWrapper(a.Executor.TemplateDirectory + jarHtmlReport)
+	wrapper, err := wrapper.CreateTattletaleWrapper(a.Executor.TemplateDirectory + jarHtmlReport)
 
 	if err != nil {
 		log.Println("Cannot analyze " + jarFilePath + " via Tattletale")

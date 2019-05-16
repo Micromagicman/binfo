@@ -3,6 +3,7 @@ package executable
 import (
 	"binfo/util"
 	"github.com/beevik/etree"
+	"github.com/fatih/set"
 )
 
 const (
@@ -14,6 +15,7 @@ const (
 type ExecutableLinkable struct {
 	BaseExecutable
 	ImExporter
+	Libraries       set.Interface
 	Format          string
 	Endianess       string
 	Version         string
@@ -59,6 +61,15 @@ func (elf *ExecutableLinkable) BuildXml(doc *etree.Document) *etree.Element {
 	root.AddChild(util.BuildNodeWithText("ElfVersion", elf.GetVersion()))
 	root.AddChild(util.BuildNodeWithText("OperatingSystem", elf.GetOperatingSystem()))
 	root.AddChild(util.BuildNodeWithText("Type", elf.GetType()))
+
+	if elf.Libraries.Size() > 0 {
+		dependenciesNode := root.CreateElement("Libraries")
+		for _, dependency := range elf.Libraries.List() {
+			dependencyNode := dependenciesNode.CreateElement("Library")
+			dependencyNode.CreateText(dependency.(string))
+		}
+	}
+
 	elf.BuildImportsAndExports(root)
 
 	if len(elf.Sections) > 0 {

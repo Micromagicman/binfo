@@ -21,7 +21,7 @@ type Executable interface {
 }
 
 type ImExporter struct {
-	Imports map[bin.Address]string
+	Imports []Function
 	Exports map[bin.Address]string
 }
 
@@ -41,10 +41,6 @@ type Section struct {
 	Flags string
 }
 
-type Library struct {
-	Name string
-}
-
 type Flag struct {
 	Name string
 }
@@ -57,10 +53,12 @@ func (f *Flag) ToXml() *etree.Element {
 
 type Function struct {
 	Name string
+	From string
 }
 
 func (f *Function) ToXml() *etree.Element {
 	functionNode := etree.NewElement("Function")
+	functionNode.CreateAttr("from", util.GetOptionalStringValue(f.From, "?"))
 	functionNode.CreateText(f.Name)
 	return functionNode
 }
@@ -109,10 +107,18 @@ func (bin *BaseExecutable) GetMagic() string {
 
 func (bin *ImExporter) BuildImportsAndExports(root *etree.Element) {
 	if len(bin.Imports) > 0 {
-		root.AddChild(buildFunctionList("Imports", bin.Imports))
+		listNode := root.CreateElement("Imports")
+		for _, fn := range bin.Imports {
+			listNode.AddChild(fn.ToXml())
+		}
 	}
 	if len(bin.Exports) > 0 {
-		root.AddChild(buildFunctionList("Exports", bin.Exports))
+		listNode := root.CreateElement("Exports")
+		for address, name := range bin.Exports {
+			funcNode := listNode.CreateElement("Function")
+			funcNode.CreateElement("Address").CreateText(address.String())
+			funcNode.CreateElement("Name").CreateText(name)
+		}
 	}
 }
 
@@ -143,16 +149,6 @@ func BuildBaseBinaryInfo(bin Executable, doc *etree.Document) *etree.Element {
 	}
 
 	return root
-}
-
-func buildFunctionList(nameOfList string, list map[bin.Address]string) *etree.Element {
-	listNode := etree.NewElement(nameOfList)
-	for address, name := range list {
-		funcNode := listNode.CreateElement("Function")
-		funcNode.CreateElement("Address").CreateText(address.String())
-		funcNode.CreateElement("Name").CreateText(name)
-	}
-	return listNode
 }
 
 func buildSizeTag(name string, value string) *etree.Element {
