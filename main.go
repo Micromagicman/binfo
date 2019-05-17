@@ -13,14 +13,12 @@ import (
 func main() {
 	binaryDirectory := flag.String("d", "", "Directory with executable files")
 	outputDirectory := flag.String("o", "", "Output directory")
+	flag.Usage = helpMessage
 	flag.Parse()
 
-	if "" == *binaryDirectory {
-		log.Fatal("Directory with executable files not defined")
-	}
-
-	if "" == *outputDirectory {
-		log.Fatal("Output directory not defined")
+	if "" == *binaryDirectory || "" == *outputDirectory {
+		flag.Usage()
+		return
 	}
 
 	binariesPath := *binaryDirectory
@@ -95,4 +93,17 @@ func detectBinaryType(binaryPath string) int {
 	default:
 		return analyzer.TYPE_UNKNOWN
 	}
+}
+
+func helpMessage() {
+	fmt.Println(
+			"Usage:\n" +
+				"\tmain.exe -d path/to/executable -o path/to/output\n" +
+		"Flags:\n" +
+			"\t-d directory with executables (required)\n" +
+			"\t-o output directory (required)\n" +
+			"Supported Formats:\n" +
+			"\t- Windows Portable Executable: exe, dll, ocx, sys, scr, drv, cpl, efi\n" +
+			"\t- Executable Linkable: exe, so, axf, bin, elf, o, a, prx\n" +
+			"\t- jar")
 }

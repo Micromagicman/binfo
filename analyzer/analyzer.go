@@ -141,6 +141,7 @@ func (a *Analyzer) ProcessWindowsBinary(pathToExecutable string) (*executable.Po
 	binFile.Size = fileStat.Size()
 	binFile.Filename, _ = filepath.Abs(pathToExecutable)
 	binFile.Architecture = objDump.GetArchitecture()
+	binFile.Exports = objDump.GetExports()
 	binFile.Flags = objDump.GetFlags()
 	binFile.Compiler = a.CompilerDetector.Detect(pathToExecutable)
 	binFile.ProgrammingLanguage = util.GetLanguageByCompiler(binFile.Compiler)
@@ -157,7 +158,6 @@ func (a *Analyzer) ProcessWindowsBinary(pathToExecutable string) (*executable.Po
 		log.Println("Cannot analyze " + pathToExecutable + " via decomp/exp/bin/pe library")
 	} else {
 		binFile.Architecture = peFile.Arch.String()
-		binFile.Exports = peFile.Exports
 	}
 
 	memrevPE, err := wrapper.CreateMemrevPEWrapper(pathToExecutable)

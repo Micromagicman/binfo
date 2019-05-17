@@ -2,6 +2,8 @@ package dump
 
 import (
 	"binfo/executable"
+	"github.com/decomp/exp/bin"
+	"strconv"
 	"strings"
 )
 
@@ -38,4 +40,34 @@ func (od *ObjDump) GetFlags() []executable.Flag {
 	}
 
 	return flags
+}
+
+
+func (od *ObjDump) GetExports() map[bin.Address]string {
+	addresses := map[string]string{}
+	names := map[string]string{}
+	exports := map[bin.Address]string{}
+
+	startIndex := strings.Index(od.Content, "Export Address Table")
+	endIndex := strings.Index(od.Content, "PE File Base Relocations")
+	dump := od.SubDump(startIndex, endIndex)
+
+	addressesMatch := dump.FindAll(`\[\s*(\d+)\]\s\+base\[\s*\d+\]\s([a-f0-9]+)\sExport\sRVA`)
+	namesMatch := dump.FindAll(`\n\s*\[\s*(\d+)\]\s([_a-zA-Z][^\s]+)`)
+
+	for _, nm := range addressesMatch {
+		addresses[Group(nm, 1)] = Group(nm, 2)
+	}
+	for _, em := range namesMatch {
+		names[Group(em, 1)] = Group(em, 2)
+	}
+
+	for k, v := range addresses {
+		if name, ok := names[k]; ok {
+			address, _ := strconv.ParseInt(v, 16, 64)
+			exports[bin.Address(address)] = name
+		}
+	}
+
+	return exports
 }

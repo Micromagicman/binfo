@@ -2,7 +2,6 @@ package dump
 
 import (
 	"regexp"
-	"strconv"
 )
 
 type Dump interface {
@@ -26,23 +25,21 @@ func (bd *BaseDump) Find(regExp string) []string {
 }
 
 func (bd *BaseDump) FindAll(regExp string) [][]string {
-	regex, _ := regexp.Compile(regExp)
+	regex := regexp.MustCompile(regExp)
 	matches := regex.FindAllStringSubmatch(bd.Content, -1)
 	return matches
 }
 
-func GetInteger(dump Dump, regex string) int64 {
-	timestampMatch := dump.Find(regex)
-	timestamp, err := strconv.Atoi(Group(timestampMatch, 1))
-	if err != nil {
-		return -1
+func (bd *BaseDump) SubDump(start int, end int) *BaseDump {
+	subContent := ""
+	if start > 0 && end < len(bd.Content) && start <= end {
+		subContent = bd.Content[start:end]
 	}
-
-	return int64(timestamp)
+	return &BaseDump{subContent}
 }
 
 func Group(matches []string, requestIndex int) string {
-	if len(matches) < requestIndex {
+	if len(matches) <= requestIndex {
 		return ""
 	}
 	return matches[requestIndex]
