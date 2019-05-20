@@ -107,6 +107,10 @@ func (bin *BaseExecutable) GetMagic() string {
 	return "Unknown"
 }
 
+func (bin *BaseExecutable) GetType() string {
+	return "Unknown Executable"
+}
+
 func (bin *ImExporter) BuildImportsAndExports(root *etree.Element) {
 	if len(bin.Imports) > 0 {
 		listNode := root.CreateElement("Imports")

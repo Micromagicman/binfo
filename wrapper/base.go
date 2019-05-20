@@ -1,8 +1,15 @@
-package dump
+package wrapper
 
 import (
+	"binfo/executable"
 	"regexp"
 )
+
+type LibraryWrapper interface {
+	GetName() string
+	LoadFile(filename string) bool
+	Process(e executable.Executable)
+}
 
 type Dump interface {
 	GetContent() string

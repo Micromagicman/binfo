@@ -1,7 +1,8 @@
-package dump
+package wrapper
 
 import (
 	"binfo/executable"
+	"binfo/os"
 	"github.com/decomp/exp/bin"
 	"strconv"
 	"strings"
@@ -11,22 +12,32 @@ type ObjDump struct {
 	BaseDump
 }
 
-func (od *ObjDump) GetDependencies() []string {
-	depMatches := od.BaseDump.FindAll("DLL Name: (.+?\\.dll)")
-	dependencies := make([]string, len(depMatches))
-
-	for index, element := range depMatches {
-		dependencies[index] = Group(element, 1)
-	}
-
-	return dependencies
+func (od *ObjDump) GetName() string {
+	return "objdump"
 }
 
-func (od *ObjDump) GetArchitecture() string {
+func (od *ObjDump) LoadFile(pathToExecutable string) bool {
+	command := os.Exec.ObjDumpCommand(pathToExecutable, "-x")
+	stdOut, err := os.Exec.Execute(command)
+	if err != nil {
+		return false
+	}
+	od.Content = string(stdOut)
+	return true
+}
+
+func (od *ObjDump) Process(e executable.Executable) {
+	peFile := e.(*executable.PortableExecutable)
+	peFile.Architecture = od.getArchitecture()
+	peFile.Exports = od.getExports()
+	peFile.Flags = od.getFlags()
+}
+
+func (od *ObjDump) getArchitecture() string {
 	return Group(od.BaseDump.Find("architecture: (.+?),"), 1)
 }
 
-func (od *ObjDump) GetFlags() []executable.Flag {
+func (od *ObjDump) getFlags() []executable.Flag {
 	flagsMatch := od.FindAll("flags 0x[0-9a-f]+?:\\s+(([A-Z0-9_]+, )*[A-Z0-9_]+)\\s")
 	if len(flagsMatch) == 0 {
 		return []executable.Flag{}
@@ -43,7 +54,7 @@ func (od *ObjDump) GetFlags() []executable.Flag {
 }
 
 
-func (od *ObjDump) GetExports() map[bin.Address]string {
+func (od *ObjDump) getExports() map[bin.Address]string {
 	addresses := map[string]string{}
 	names := map[string]string{}
 	exports := map[bin.Address]string{}

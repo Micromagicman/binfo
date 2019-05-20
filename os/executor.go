@@ -1,10 +1,12 @@
-package analyzer
+package os
 
 import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
 )
+
+var Exec = executorFactory()
 
 type Executor struct {
 	DefaultWorkingDirectory string
@@ -58,7 +60,7 @@ func (e *Executor) CDetectCommand(binaryFilePath string) string {
 	return e.RunningCommands["cdetect"] + " " + binaryFilePath
 }
 
-func ExecutorFactory() *Executor {
+func executorFactory() *Executor {
 	switch runtime.GOOS {
 	case "windows":
 		return createWindowsExecutor()

@@ -10,22 +10,26 @@ type ELFReader struct {
 	File elf_reader.ELFFile
 }
 
-func CreateELFReaderWrapper(pathToElf string) (*ELFReader, error) {
-	raw, e := ioutil.ReadFile(pathToElf)
-	if e != nil {
-		return nil, e
-	}
-
-	elf, e := elf_reader.ParseELFFile(raw)
-	if e != nil {
-		return nil, e
-	}
-
-	return &ELFReader{elf}, nil
+func (er *ELFReader) GetName() string {
+	return "ElfReader"
 }
 
-func (er *ELFReader) Process(bin *executable.ExecutableLinkable) {
-	bin.Sections = er.getSections()
+func (er *ELFReader) LoadFile(pathToExecutable string) bool {
+	raw, err := ioutil.ReadFile(pathToExecutable)
+	if err != nil {
+		return false
+	}
+	elf, err := elf_reader.ParseELFFile(raw)
+	if err != nil {
+		return false
+	}
+	er.File = elf
+	return true
+}
+
+func (er *ELFReader) Process(e executable.Executable) {
+	elfFile := e.(*executable.ExecutableLinkable)
+	elfFile.Sections = er.getSections()
 }
 
 func (er *ELFReader) getSections() []executable.Section {
@@ -52,23 +56,3 @@ func (er *ELFReader) getSections() []executable.Section {
 
 	return sections
 }
-
-//func (er *ELFReader) GetImportedFunctions() []executable.Function {
-//	count := er.File.GetSectionCount()
-//	functions := []executable.Function{}
-//
-//	for i := uint16(1); i < count; i++ {
-//		_, functionNames, err := er.File.GetSymbols(i)
-//		if err != nil {
-//			continue
-//		}
-//
-//		for _, functionName := range functionNames {
-//			if functionName != "" && !strings.Contains(functionName, ".") && !strings.Contains(functionName, "@") {
-//				functions = append(functions, executable.Function{functionName})
-//			}
-//		}
-//	}
-//
-//	return functions
-//}

@@ -2,8 +2,8 @@ package analyzer
 
 import (
 	"binfo/executable"
+	osUtils "binfo/os"
 	"binfo/util"
-	"binfo/wrapper"
 	"binfo/xml"
 	"fmt"
 	"github.com/H5eye/go-pefile"
@@ -47,16 +47,16 @@ type Cache struct {
 }
 
 type Analyzer struct {
-	Executor *Executor
 	CompilerDetector *CompilerDetector
 	Cache    *Cache
+	Utilities *UtilitiesContainer
 }
 
 func CreateAnalyzer() *Analyzer {
 	analyzer := new(Analyzer)
 	analyzer.Cache = new(Cache)
-	analyzer.Executor = ExecutorFactory()
-	analyzer.CompilerDetector = CreateDetector("backend" + analyzer.Executor.Sep + "compiler_signatures.txt")
+	analyzer.Utilities = BuildUtilitiesContainer()
+	analyzer.CompilerDetector = CreateDetector("backend" + osUtils.Exec.Sep + "compiler_signatures.txt")
 	return analyzer
 }
 
@@ -112,19 +112,19 @@ func (a *Analyzer) Jar(pathToJar string) (*executable.JarExecutable, error) {
 	jar.Filename, _ = filepath.Abs(pathToJar)
 	jar.ProgrammingLanguage = "Java"
 
-	tattletale := a.Tattletale(pathToJar)
-	if tattletale != nil {
-		jar.Manifest = tattletale.GetManifest()
-		jar.Requires = tattletale.GetRequires()
-		jar.Provides = tattletale.GetProvides()
-	}
-
-	jarAnalyzerTree, jarAnalyzerError := a.JarAnalyzer(pathToJar)
-	if jarAnalyzerError != nil {
-		log.Println("Cannot analyze file " + pathToJar + " via JarAnalyzer")
-	} else {
-		jar.JarAnalyzerTree = jarAnalyzerTree
-	}
+	//tattletale := a.Tattletale(pathToJar)
+	//if tattletale != nil {
+	//	jar.Manifest = tattletale.GetManifest()
+	//	jar.Requires = tattletale.GetRequires()
+	//	jar.Provides = tattletale.GetProvides()
+	//}
+	//
+	//jarAnalyzerTree, jarAnalyzerError := a.JarAnalyzer(pathToJar)
+	//if jarAnalyzerError != nil {
+	//	log.Println("Cannot analyze file " + pathToJar + " via JarAnalyzer")
+	//} else {
+	//	jar.JarAnalyzerTree = jarAnalyzerTree
+	//}
 
 	return jar, nil
 }
@@ -136,21 +136,17 @@ func (a *Analyzer) ProcessWindowsBinary(pathToExecutable string) (*executable.Po
 	}
 
 	binFile := new(executable.PortableExecutable)
-	objDump := a.ObjDump(pathToExecutable, "x")
-
 	binFile.Size = fileStat.Size()
 	binFile.Filename, _ = filepath.Abs(pathToExecutable)
-	binFile.Architecture = objDump.GetArchitecture()
-	binFile.Exports = objDump.GetExports()
-	binFile.Flags = objDump.GetFlags()
 	binFile.Compiler = a.CompilerDetector.Detect(pathToExecutable)
 	binFile.ProgrammingLanguage = util.GetLanguageByCompiler(binFile.Compiler)
 
-	debugPe, err := wrapper.CreateDebugPeWrapper(pathToExecutable)
-	if err != nil {
-		log.Println("Cannot analyze " + pathToExecutable + " via decomp/exp/bin/pe library")
-	} else {
-		debugPe.Process(binFile)
+	for _, l := range a.Utilities.PE {
+		if l.LoadFile(pathToExecutable) {
+			l.Process(binFile)
+		} else {
+			log.Println("Cannot analyze " + pathToExecutable + " via " + l.GetName())
+		}
 	}
 
 	peFile, err := pe.ParseFile(pathToExecutable)
@@ -158,13 +154,6 @@ func (a *Analyzer) ProcessWindowsBinary(pathToExecutable string) (*executable.Po
 		log.Println("Cannot analyze " + pathToExecutable + " via decomp/exp/bin/pe library")
 	} else {
 		binFile.Architecture = peFile.Arch.String()
-	}
-
-	memrevPE, err := wrapper.CreateMemrevPEWrapper(pathToExecutable)
-	if err != nil {
-		log.Println("Cannot analyze " + pathToExecutable + " via memrew/pe library")
-	} else {
-		memrevPE.Process(binFile)
 	}
 
 	peLoad, peError := pefile.Load(pathToExecutable)
@@ -185,38 +174,23 @@ func (a *Analyzer) ProcessLinuxBinary(pathToExecutable string) (*executable.Exec
 	}
 
 	bin := new(executable.ExecutableLinkable)
-	elfDump := a.ELFReader(pathToExecutable)
-
 	bin.Filename, _ = filepath.Abs(pathToExecutable)
-	bin.OperatingSystem = elfDump.GetOperatingSystem()
 	bin.Size = fileStat.Size()
-	bin.Format = elfDump.GetFormat()
-	bin.Version = elfDump.GetVersion()
-	bin.Endianess = elfDump.GetEndianess()
-	bin.Compiler = a.CDetect(pathToExecutable)
-	bin.ProgrammingLanguage = util.GetLanguageByCompiler(bin.Compiler)
+
+	for _, l := range a.Utilities.ELF {
+		if l.LoadFile(pathToExecutable) {
+			l.Process(bin)
+		} else {
+			log.Println("Cannot analyze " + pathToExecutable + " via " + l.GetName())
+		}
+	}
 
 	elfFile, err := elf.ParseFile(pathToExecutable)
 	if err != nil {
 		log.Println("Cannot analyze " + pathToExecutable + " via decomp/exp/bin/elf library")
 	} else {
 		bin.Architecture = elfFile.Arch.String()
-		//bin.Imports = elfFile.Imports
 		bin.Exports = elfFile.Exports
-	}
-
-	elfInfo, err := wrapper.CreateELFReaderWrapper(pathToExecutable)
-	if err != nil {
-		log.Println("Cannot analyze " + pathToExecutable + " via ELFReader")
-	} else {
-		elfInfo.Process(bin)
-	}
-
-	debugElf, err := wrapper.CreateDebugElfWrapper(pathToExecutable)
-	if err != nil {
-		log.Println("Cannot analyze " + pathToExecutable + " via ELFReader")
-	} else {
-		debugElf.Process(bin)
 	}
 
 	return bin, nil
@@ -245,7 +219,7 @@ func fileStat(path string) (os.FileInfo, error) {
 }
 
 func (a *Analyzer) CreateTemplateDirectory() {
-	templateDir := a.Executor.TemplateDirectory
+	templateDir := osUtils.Exec.TemplateDirectory
 	if _, err := os.Stat(templateDir); os.IsNotExist(err) {
 		err := util.CreateDirectory(templateDir)
 		util.LogIfError(err, "Error creating template directory")
@@ -263,10 +237,10 @@ func (a *Analyzer) InitOutputDirectory(outDir string) {
 }
 
 func (a *Analyzer) DeleteTemplateDirectory() {
-	err := util.RemoveDirectory(a.Executor.TemplateDirectory)
+	err := util.RemoveDirectory(osUtils.Exec.TemplateDirectory)
 	util.LogIfError(err, "Error removing template directory")
 }
 
 func (a *Analyzer) SaveResult(bin executable.Executable, outputDirectory string, path string) {
-	xml.BuildXml(bin, outputDirectory+a.Executor.Sep+filepath.Base(path)+".xml")
+	xml.BuildXml(bin, outputDirectory+osUtils.Exec.Sep+filepath.Base(path)+".xml")
 }

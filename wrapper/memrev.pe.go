@@ -10,29 +10,35 @@ type MemrevPE struct {
 	File *pe.File
 }
 
-func CreateMemrevPEWrapper(pathToBinary string) (*MemrevPE, error) {
-	file, err := pe.Open(pathToBinary)
-	if err != nil {
-		return nil, err
-	}
-	return &MemrevPE{file}, nil
+func (mpe *MemrevPE) GetName() string {
+	return "memrev/pe"
 }
 
-func (pe *MemrevPE) Process(peBin *executable.PortableExecutable) {
-	fileHeader, _ := pe.File.FileHeader()
-	peBin.SectionNumber = fileHeader.NSection
-	peBin.Architecture = fileHeader.Arch.String()
+func (mpe *MemrevPE) LoadFile(pathToExecutable string) bool {
+	file, err := pe.Open(pathToExecutable)
+	if err != nil {
+		return false
+	}
+	mpe.File = file
+	return true
+}
 
-	sectionHeaders, _ := pe.File.SectHeaders()
-	optionalHeader, _ := pe.File.OptHeader()
+func (mpe *MemrevPE) Process(e executable.Executable) {
+	peFile := e.(*executable.PortableExecutable)
+	fileHeader, _ := mpe.File.FileHeader()
+	peFile.SectionNumber = fileHeader.NSection
+	peFile.Architecture = fileHeader.Arch.String()
 
-	peBin.LinkerVersion = util.Int64ToString(int64(optionalHeader.MajorLinkVer)) + "." + util.Int64ToString(int64(optionalHeader.MinorLinkVer))
-	peBin.OsVersion = util.Int64ToString(int64(optionalHeader.MajorOSVer)) + "." + util.Int64ToString(int64(optionalHeader.MinorOSVer))
-	peBin.Checksum = util.Int64ToHex(int64(optionalHeader.Checksum))
-	peBin.CodeRVA = util.Int64ToHex(int64(optionalHeader.CodeBase))
-	peBin.CodeSize = util.Int64ToString(int64(optionalHeader.CodeSize))
-	peBin.DataRVA = util.Int64ToHex(int64(optionalHeader.DataSize))
-	peBin.DataSize = util.Int64ToString(int64(optionalHeader.DataSize))
+	sectionHeaders, _ := mpe.File.SectHeaders()
+	optionalHeader, _ := mpe.File.OptHeader()
 
-	peBin.Sections = sectionHeaders
+	peFile.LinkerVersion = util.Int64ToString(int64(optionalHeader.MajorLinkVer)) + "." + util.Int64ToString(int64(optionalHeader.MinorLinkVer))
+	peFile.OsVersion = util.Int64ToString(int64(optionalHeader.MajorOSVer)) + "." + util.Int64ToString(int64(optionalHeader.MinorOSVer))
+	peFile.Checksum = util.Int64ToHex(int64(optionalHeader.Checksum))
+	peFile.CodeRVA = util.Int64ToHex(int64(optionalHeader.CodeBase))
+	peFile.CodeSize = util.Int64ToString(int64(optionalHeader.CodeSize))
+	peFile.DataRVA = util.Int64ToHex(int64(optionalHeader.DataSize))
+	peFile.DataSize = util.Int64ToString(int64(optionalHeader.DataSize))
+
+	peFile.Sections = sectionHeaders
 }
