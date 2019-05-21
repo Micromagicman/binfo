@@ -9,17 +9,17 @@ import (
 	"strings"
 )
 
-type Compiler struct {
+type PECompiler struct {
 	Signature []interface{}
 	EpOnly bool
 }
 
-type CompilerDetector struct {
-	Compilers map[string]Compiler
+type PECompilerDetector struct {
+	Compilers map[string]PECompiler
 }
 
 
-func (cd *CompilerDetector) Detect(pathToExecutable string) string {
+func (cd *PECompilerDetector) Detect(pathToExecutable string) string {
 	file, _ := os.Open(pathToExecutable)
 	maxMatchCount := 0
 	bestMatchCompilerName := executable.DEFAULT_VALUE
@@ -33,7 +33,7 @@ func (cd *CompilerDetector) Detect(pathToExecutable string) string {
 	return bestMatchCompilerName
 }
 
-func (c *Compiler) Match(file *os.File) int {
+func (c *PECompiler) Match(file *os.File) int {
 	fileBytes := make([]byte, len(c.Signature))
 	file.Read(fileBytes)
 	file.Seek(0, 0)
@@ -49,10 +49,10 @@ func (c *Compiler) Match(file *os.File) int {
 	return matchCount
 }
 
-func CreateDetector(pathToDatabase string) *CompilerDetector {
+func CreateDetector(pathToDatabase string) *PECompilerDetector {
 	signatures := parseSignatures(pathToDatabase)
-	detector := new(CompilerDetector)
-	detector.Compilers = map[string]Compiler{}
+	detector := new(PECompilerDetector)
+	detector.Compilers = map[string]PECompiler{}
 	// [1] - Имя компилятора
 	// [2] - сигнатура
 	// [5] - EpOnly
@@ -63,7 +63,7 @@ func CreateDetector(pathToDatabase string) *CompilerDetector {
 		}
 		compilerName := s[1]
 		signature := createByteSignature(s[2])
-		detector.Compilers[compilerName] = Compiler{signature, epOnly}
+		detector.Compilers[compilerName] = PECompiler{signature, epOnly}
 	}
 	return detector
 }

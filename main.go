@@ -3,6 +3,7 @@ package main
 import (
 	"binfo/analyzer"
 	"binfo/executable"
+	"binfo/os"
 	"binfo/util"
 	"flag"
 	"fmt"
@@ -24,8 +25,8 @@ func main() {
 	binariesPath := *binaryDirectory
 	outputPath := *outputDirectory
 	a := analyzer.CreateAnalyzer()
-	a.CreateTemplateDirectory()
-	a.InitOutputDirectory(outputPath)
+	os.CreateTemplateDirectory()
+	os.InitOutputDirectory(outputPath)
 
 	for _, path := range util.GetDirectoryFilePaths(binariesPath) {
 		if !util.CheckFileExists(path) {
@@ -50,10 +51,10 @@ func main() {
 		}
 
 		util.LogIfError(err, "Cannot analyze file "+path)
-		a.SaveResult(binFile, outputPath, path)
+		os.SaveResult(binFile, outputPath, path)
 	}
 
-	a.DeleteTemplateDirectory()
+	//os.DeleteTemplateDirectory()
 }
 
 func detectBinaryType(binaryPath string) int {

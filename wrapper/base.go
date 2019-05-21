@@ -21,6 +21,18 @@ type BaseDump struct {
 	Content string
 }
 
+type OnlyRun struct {
+	Executed bool
+}
+
+func (or *OnlyRun) MarkAsExecuted() {
+	or.Executed = true
+}
+
+func (or *OnlyRun) WasExecuted() bool {
+	return or.Executed
+}
+
 func (bd *BaseDump) GetContent() string {
 	return bd.Content
 }

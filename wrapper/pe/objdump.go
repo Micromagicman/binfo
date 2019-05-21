@@ -1,15 +1,16 @@
-package wrapper
+package pe
 
 import (
 	"binfo/executable"
 	"binfo/os"
+	"binfo/wrapper"
 	"github.com/decomp/exp/bin"
 	"strconv"
 	"strings"
 )
 
 type ObjDump struct {
-	BaseDump
+	wrapper.BaseDump
 }
 
 func (od *ObjDump) GetName() string {
@@ -34,7 +35,7 @@ func (od *ObjDump) Process(e executable.Executable) {
 }
 
 func (od *ObjDump) getArchitecture() string {
-	return Group(od.BaseDump.Find("architecture: (.+?),"), 1)
+	return wrapper.Group(od.BaseDump.Find("architecture: (.+?),"), 1)
 }
 
 func (od *ObjDump) getFlags() []executable.Flag {
@@ -43,7 +44,7 @@ func (od *ObjDump) getFlags() []executable.Flag {
 		return []executable.Flag{}
 	}
 
-	flagStrings := strings.Split(Group(flagsMatch[0], 1), ", ")
+	flagStrings := strings.Split(wrapper.Group(flagsMatch[0], 1), ", ")
 	flags := make([]executable.Flag, len(flagStrings))
 
 	for index, element := range flagStrings {
@@ -67,10 +68,10 @@ func (od *ObjDump) getExports() map[bin.Address]string {
 	namesMatch := dump.FindAll(`\n\s*\[\s*(\d+)\]\s([_a-zA-Z][^\s]+)`)
 
 	for _, nm := range addressesMatch {
-		addresses[Group(nm, 1)] = Group(nm, 2)
+		addresses[wrapper.Group(nm, 1)] = wrapper.Group(nm, 2)
 	}
 	for _, em := range namesMatch {
-		names[Group(em, 1)] = Group(em, 2)
+		names[wrapper.Group(em, 1)] = wrapper.Group(em, 2)
 	}
 
 	for k, v := range addresses {

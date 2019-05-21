@@ -2,11 +2,10 @@ package executable
 
 import (
 	"binfo/util"
+	"github.com/beevik/etree"
 	"github.com/decomp/exp/bin"
 	"github.com/fatih/set"
 	"time"
-
-	"github.com/beevik/etree"
 )
 
 type Executable interface {
@@ -19,6 +18,8 @@ type Executable interface {
 	GetType() string
 	GetMagic() string
 	GetProgrammingLanguage() string
+	SetFileName(fileName string)
+	SetSize(size int64)
 	BuildXml(document *etree.Document) *etree.Element
 }
 
@@ -73,6 +74,14 @@ type BaseExecutable struct {
 	Time                time.Time
 	Compiler            string
 	ProgrammingLanguage string
+}
+
+func (bin *BaseExecutable) SetFileName(fileName string) {
+	bin.Filename = fileName
+}
+
+func (bin *BaseExecutable) SetSize(size int64) {
+	bin.Size = size
 }
 
 func (bin *BaseExecutable) GetFilename() string {

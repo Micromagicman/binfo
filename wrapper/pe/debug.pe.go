@@ -1,4 +1,4 @@
-package wrapper
+package pe
 
 import (
 	"binfo/executable"

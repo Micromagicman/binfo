@@ -1,12 +1,13 @@
-package wrapper
+package elf
 
 import (
 	"binfo/executable"
 	"binfo/os"
+	"binfo/wrapper"
 )
 
 type ELFReaderUtil struct {
-	BaseDump
+	wrapper.BaseDump
 }
 
 func (eru *ELFReaderUtil) GetName() string {
@@ -32,18 +33,18 @@ func (eru *ELFReaderUtil) Process(e executable.Executable) {
 }
 
 func (eru *ELFReaderUtil) getOperatingSystem() string {
-	return Group(eru.Find("Operating System:\\s+([^.]+)"), 1)
+	return wrapper.Group(eru.Find("Operating System:\\s+([^.]+)"), 1)
 }
 
 func (eru *ELFReaderUtil) getFormat() string {
-	return Group(eru.Find("Bit format:\\s+([^.]+)"), 1)
+	return wrapper.Group(eru.Find("Bit format:\\s+([^.]+)"), 1)
 }
 
 func (eru *ELFReaderUtil) getEndianess() string {
-	return Group(eru.Find("Endianess:\\s+([^.]+)"), 1)
+	return wrapper.Group(eru.Find("Endianess:\\s+([^.]+)"), 1)
 }
 
 func (eru *ELFReaderUtil) getVersion() string {
-	return Group(eru.Find("ELF Version:\\s+([^.]+)"), 1)
+	return wrapper.Group(eru.Find("ELF Version:\\s+([^.]+)"), 1)
 }
 
