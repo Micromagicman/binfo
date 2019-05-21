@@ -37,7 +37,7 @@ func BuildUtilitiesContainer() *UtilitiesContainer {
 		new(elf.CDetect),
 		new(elf.DecompELF),
 	}
-	// Библиотеки для ProcessJar
+	// Библиотеки для Jar
 	container.JAR = []wrapper.LibraryWrapper{
 		new(jar.Tattletale),
 		new(jar.JarAnalyzer),

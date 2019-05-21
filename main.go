@@ -54,7 +54,7 @@ func main() {
 		os.SaveResult(binFile, outputPath, path)
 	}
 
-	//os.DeleteTemplateDirectory()
+	os.DeleteTemplateDirectory()
 }
 
 func detectBinaryType(binaryPath string) int {

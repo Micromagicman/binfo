@@ -1,15 +1,5 @@
-Реализация метода "Извлечение информации из исполняемого кода программы"
-
-## Запуск
+## Run
 
 ```
-go run main.go -b=<Директория с бинарниками> -o=<Директория с результатом работы>
-```
-
-## Перевод xml тегов
-```go
-import "binfo/util"
-
-tagName := "Class"
-translated := util.Translate(tagName)
+go run main.go -b=<directory with executables> -o=<output directory>
 ```
