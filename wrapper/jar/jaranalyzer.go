@@ -2,8 +2,9 @@ package jar
 
 import (
 	"binfo/executable"
-	osUtils "binfo/os"
+	"binfo/os"
 	"binfo/wrapper"
+	"fmt"
 	"github.com/beevik/etree"
 	"path/filepath"
 	"strings"
@@ -15,21 +16,33 @@ type JarAnalyzer struct {
 	JarElements []*etree.Element
 }
 
+func (ja *JarAnalyzer) GetWindowsCommand(filePath string) string {
+	fileDir := filepath.Dir(filePath)
+	fmt.Println("call " + os.BackendDir + os.Sep + "jaranalyzer" + os.Sep + "runxmlsummary.bat " +
+		fileDir + " " + os.TemplateDir)
+	return "call " + os.BackendDir + os.Sep + "jaranalyzer" + os.Sep + "runxmlsummary.bat " +
+		fileDir + " " + os.TemplateDir + os.Sep + "temp.xml"
+}
+
+func (ja *JarAnalyzer) GetLinuxCommand(filePath string) string {
+	fileDir := filepath.Dir(filePath)
+	return "call " + os.BackendDir + os.Sep + "jaranalyzer" + os.Sep + "runxmlsummary.bat "+
+		fileDir + " " + os.TemplateDir + os.Sep + "temp.xml"
+}
+
 func (ja *JarAnalyzer) GetName() string {
 	return "jaranalyzer"
 }
 
 func (ja *JarAnalyzer) LoadFile(pathToExecutable string) bool {
 	if !ja.WasExecuted() {
-		jarAnalyzerPath := osUtils.Exec.AnalyzersPath + "jaranalyzer" + osUtils.Exec.Sep
-		dir := filepath.Dir(pathToExecutable)
-		_, err := osUtils.Exec.Execute(jarAnalyzerPath + "runxmlsummary.bat " + dir + " " + osUtils.Exec.TemplateDirectory + "temp.xml")
+		_, err := os.Execute(pathToExecutable, ja)
 		if err != nil {
 			return false
 		}
 
 		doc := etree.NewDocument()
-		if err := doc.ReadFromFile(osUtils.Exec.TemplateDirectory + "temp.xml"); err != nil {
+		if err := doc.ReadFromFile(os.TemplateDir + os.Sep + "temp.xml"); err != nil {
 			return false
 		}
 

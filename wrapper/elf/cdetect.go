@@ -10,13 +10,20 @@ type CDetect struct {
 	Compiler string
 }
 
+func (cd *CDetect) GetWindowsCommand(filePath string) string {
+	return "call " + os.BackendDir + os.Sep + "cdetect.exe " + filePath
+}
+
+func (cd *CDetect) GetLinuxCommand(filePath string) string {
+	return os.BackendDir + os.Sep + "cdetect " + filePath
+}
+
 func (cd *CDetect) GetName() string {
 	return "cdetect"
 }
 
 func (cd *CDetect) LoadFile(pathToExecutable string) bool {
-	command := os.Exec.CDetectCommand(pathToExecutable)
-	stdOut, err := os.Exec.Execute(command)
+	stdOut, err := os.Execute(pathToExecutable, cd)
 	if err != nil {
 		return false
 	}

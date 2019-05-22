@@ -10,13 +10,20 @@ type ELFReaderUtil struct {
 	wrapper.BaseDump
 }
 
+func (eru *ELFReaderUtil) GetWindowsCommand(filePath string) string {
+	return "call " + os.BackendDir + os.Sep + "elfreader.exe " + filePath
+}
+
+func (eru *ELFReaderUtil) GetLinuxCommand(filePath string) string {
+	return os.BackendDir + os.Sep + "elfreader " + filePath
+}
+
 func (eru *ELFReaderUtil) GetName() string {
 	return "elfreader-util"
 }
 
 func (eru *ELFReaderUtil) LoadFile(pathToExecutable string) bool {
-	command := os.Exec.ELFReaderCommand(pathToExecutable)
-	stdOut, err := os.Exec.Execute(command)
+	stdOut, err := os.Execute(pathToExecutable, eru)
 	if err != nil {
 		return false
 	}

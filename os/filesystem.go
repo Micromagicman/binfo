@@ -9,12 +9,11 @@ import (
 )
 
 func CreateTemplateDirectory() {
-	templateDir := Exec.TemplateDirectory
-	if _, err := os.Stat(templateDir); os.IsNotExist(err) {
-		err := util.CreateDirectory(templateDir)
+	if _, err := os.Stat(TemplateDir); os.IsNotExist(err) {
+		err := util.CreateDirectory(TemplateDir)
 		util.LogIfError(err, "Error creating template directory")
 	} else {
-		err := util.ClearDirectory(templateDir)
+		err := util.ClearDirectory(TemplateDir)
 		util.LogIfError(err,"Error clear template directory")
 	}
 }
@@ -30,10 +29,10 @@ func InitOutputDirectory(outDir string) {
 }
 
 func DeleteTemplateDirectory() {
-	err := util.RemoveDirectory(Exec.TemplateDirectory)
+	err := util.RemoveDirectory(TemplateDir)
 	util.LogIfError(err, "Error removing template directory")
 }
 
 func SaveResult(bin executable.Executable, outputDirectory string, path string) {
-	xml.BuildXml(bin, outputDirectory+Exec.Sep+filepath.Base(path)+".xml")
+	xml.BuildXml(bin, outputDirectory+Sep+filepath.Base(path)+".xml")
 }

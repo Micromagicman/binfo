@@ -44,7 +44,7 @@ type Analyzer struct {
 func CreateAnalyzer() *Analyzer {
 	analyzer := new(Analyzer)
 	analyzer.Utilities = BuildUtilitiesContainer()
-	analyzer.CompilerDetector = CreateDetector("backend" + osUtils.Exec.Sep + "compiler_signatures.txt")
+	analyzer.CompilerDetector = CreateDetector(osUtils.BackendDir + osUtils.Sep + "compiler_signatures.txt")
 	return analyzer
 }
 

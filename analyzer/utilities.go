@@ -39,8 +39,8 @@ func BuildUtilitiesContainer() *UtilitiesContainer {
 	}
 	// Библиотеки для Jar
 	container.JAR = []wrapper.LibraryWrapper{
-		new(jar.Tattletale),
 		new(jar.JarAnalyzer),
+		new(jar.Tattletale),
 	}
 	return container
 }

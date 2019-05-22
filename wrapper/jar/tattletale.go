@@ -16,21 +16,30 @@ type Tattletale struct {
 	Tree *goquery.Document
 }
 
+func (tt *Tattletale) GetWindowsCommand(filePath string) string {
+	fileDir := filepath.Dir(filePath)
+	return "java -jar " + osUtils.BackendDir + osUtils.Sep + "tattletale1.2.0.jar " + fileDir + " " + osUtils.TemplateDir
+}
+
+func (tt *Tattletale) GetLinuxCommand(filePath string) string {
+	fileDir := filepath.Dir(filePath)
+	return "java -jar " + osUtils.BackendDir + osUtils.Sep + "tattletale1.2.0.jar " + fileDir + " " + osUtils.TemplateDir
+}
+
 func (tt *Tattletale) GetName() string {
 	return "tattletale"
 }
 
 func (tt *Tattletale) LoadFile(pathToExecutable string) bool {
 	if !tt.WasExecuted() {
-		command := osUtils.Exec.TattletaleCommand(pathToExecutable)
-		_, err := osUtils.Exec.Execute(command)
+		_, err := osUtils.Execute(pathToExecutable, tt)
 		if err != nil {
 			return false
 		}
 		tt.MarkAsExecuted()
 	}
 
-	jarHtmlReport := osUtils.Exec.TemplateDirectory + "jar" + osUtils.Exec.Sep + filepath.Base(pathToExecutable) + ".html"
+	jarHtmlReport := osUtils.TemplateDir + osUtils.Sep + "jar" + osUtils.Sep + filepath.Base(pathToExecutable) + ".html"
 	htmlReport, err := os.Open(jarHtmlReport)
 	if err != nil {
 		return false

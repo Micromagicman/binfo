@@ -4,6 +4,7 @@ import (
 	"binfo/executable"
 	"binfo/os"
 	"binfo/wrapper"
+	"fmt"
 	"github.com/decomp/exp/bin"
 	"strconv"
 	"strings"
@@ -13,13 +14,21 @@ type ObjDump struct {
 	wrapper.BaseDump
 }
 
+func (od *ObjDump) GetWindowsCommand(filePath string) string {
+	fmt.Println("call " + os.BackendDir + os.Sep + "objdump.exe " + filePath + " -x")
+	return "call " + os.BackendDir + os.Sep + "objdump.exe " + filePath + " -x"
+}
+
+func (od *ObjDump) GetLinuxCommand(filePath string) string {
+	return os.BackendDir + os.Sep + "objdump " + filePath + " -x"
+}
+
 func (od *ObjDump) GetName() string {
 	return "objdump"
 }
 
 func (od *ObjDump) LoadFile(pathToExecutable string) bool {
-	command := os.Exec.ObjDumpCommand(pathToExecutable, "-x")
-	stdOut, err := os.Exec.Execute(command)
+	stdOut, err := os.Execute(pathToExecutable, od)
 	if err != nil {
 		return false
 	}
