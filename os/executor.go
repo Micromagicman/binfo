@@ -1,25 +1,28 @@
 package os
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 )
 
 type CommandRunnable interface {
-	GetWindowsCommand(filePath string) string
-	GetLinuxCommand(filePath string) string
+	GetWindowsCommand() string
+	GetLinuxCommand() string
 }
 
 var Sep = string(os.PathSeparator)
 var WorkingDir = "." + Sep
-var BackendDir = WorkingDir + "backend"
+var BackendDir = WorkingDir + "binfo-backend"
 var TemplateDir = WorkingDir + "temp"
 
-func Execute(filePath string, cr CommandRunnable) ([]byte, error) {
-	cmd := exec.Command(cr.GetLinuxCommand(filePath))
+func Execute(cr CommandRunnable, arguments... string) ([]byte, error) {
+	cmd := exec.Command(cr.GetLinuxCommand(), arguments...)
 	if runtime.GOOS == "windows" {
-		cmd = exec.Command("cmd", "/C", cr.GetWindowsCommand(filePath))
+		fmt.Println(cr.GetWindowsCommand() + " " + strings.Join(arguments, " "))
+		cmd = exec.Command("cmd", "/C", cr.GetWindowsCommand() + " " + strings.Join(arguments, " "))
 	}
 	cmd.Dir = WorkingDir
 	stdoutStderr, err := cmd.CombinedOutput()
@@ -27,4 +30,13 @@ func Execute(filePath string, cr CommandRunnable) ([]byte, error) {
 		return nil, err
 	}
 	return stdoutStderr, nil
+}
+
+func move(slice []int, to int) {
+	for i, _ := range slice {
+		temp := slice[i]
+		slice[i] = slice[(i + to) % len(slice)]
+		slice[(i + to) % len(slice)] = temp
+	}
+	fmt.Println(slice)
 }

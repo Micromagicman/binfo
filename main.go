@@ -1,14 +1,15 @@
 package main
 
 import (
-	"binfo/analyzer"
-	"binfo/executable"
-	"binfo/os"
-	"binfo/util"
 	"flag"
 	"fmt"
+	"github.com/micromagicman/binary-info/analyzer"
+	"github.com/micromagicman/binary-info/executable"
+	"github.com/micromagicman/binary-info/os"
+	"github.com/micromagicman/binary-info/util"
 	"log"
 	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -49,9 +50,11 @@ func main() {
 				continue
 			}
 		}
-
-		util.LogIfError(err, "Cannot analyze file "+path)
-		os.SaveResult(binFile, outputPath, path)
+		if nil != err {
+			log.Println("Cannot analyze file "+path)
+		} else {
+			os.SaveResult(binFile, util.CreateOutputPath(strings.TrimPrefix(path, binariesPath), outputPath))
+		}
 	}
 
 	os.DeleteTemplateDirectory()

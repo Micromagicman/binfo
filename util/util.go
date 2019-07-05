@@ -2,7 +2,6 @@ package util
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -71,12 +70,7 @@ func GetLanguageByCompiler(compilerName string) string {
 }
 
 func CreateDirectory(name string) error {
-	err := os.MkdirAll(name, os.ModePerm)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return os.MkdirAll(name, 0664)
 }
 
 func RemoveDirectory(name string) error {
@@ -110,17 +104,27 @@ func CheckFileExists(filePath string) bool {
 	return err == nil
 }
 
+func CreateOutputPath(executablePath string, outputPath string) string {
+	return filepath.Join(outputPath, executablePath + ".xml")
+}
+
 func GetDirectoryFilePaths(directoryPath string) []string {
-	files, err := ioutil.ReadDir(directoryPath)
-	if err != nil {
+	var filePaths []string
+	err := filepath.Walk(directoryPath, func(path string, info os.FileInfo, err error) error {
+		if nil != err {
+			return err
+		}
+		if !info.IsDir() {
+			filePaths = append(filePaths, path)
+		}
+		return nil
+	})
+	if nil != err {
 		log.Fatal("Cannot read directory with binaries")
 	}
-
-	filePaths := make([]string, len(files))
-	for i, file := range files {
-		filePaths[i] = directoryPath + string(os.PathSeparator) + file.Name()
-	}
-
+	//for i, file := range files {
+	//	filePaths[i] = directoryPath + string(os.PathSeparator) + file.Name()
+	//}
 	return filePaths
 }
 
@@ -144,4 +148,20 @@ func AppendIfNotExists(el string, list[]string) []string {
 		list = append(list, el)
 	}
 	return list
+}
+
+func MapKeys(m map[interface{}]interface{}) []interface{} {
+	var keys []interface{}
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func MapValues(m map[interface{}]interface{}) []interface{} {
+	var values []interface{}
+	for _, v := range m {
+		values = append(values, v)
+	}
+	return values
 }

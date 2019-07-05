@@ -1,9 +1,9 @@
 package pe
 
 import (
-	"binfo/executable"
 	"debug/pe"
 	"github.com/fatih/set"
+	"github.com/micromagicman/binary-info/executable"
 	"strings"
 )
 
@@ -17,7 +17,7 @@ func (dpe *DebugPe) GetName() string {
 
 func (dpe *DebugPe) LoadFile(pathToExecutable string) bool {
 	file, err := pe.Open(pathToExecutable)
-	if err != nil {
+	if nil != err {
 		return false
 	}
 	dpe.File = file
@@ -28,13 +28,13 @@ func (dpe *DebugPe) Process(e executable.Executable) {
 	peFile := e.(*executable.PortableExecutable)
 	peFile.Libraries = set.New(set.NonThreadSafe)
 	libraries, err := dpe.File.ImportedLibraries()
-	if err == nil {
+	if nil == err {
 		for _, l := range libraries {
 			peFile.Libraries.Add(l)
 		}
 	}
 	symbols, err := dpe.File.ImportedSymbols()
-	if err == nil {
+	if nil == err {
 		imports := make([]executable.Function, len(symbols))
 		for i, s := range symbols {
 			nameFrom := strings.Split(s, ":")

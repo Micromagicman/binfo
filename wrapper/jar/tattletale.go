@@ -1,9 +1,9 @@
 package jar
 
 import (
-	"binfo/executable"
-	osUtils "binfo/os"
-	"binfo/wrapper"
+	"github.com/micromagicman/binary-info/executable"
+	osUtils "github.com/micromagicman/binary-info/os"
+	"github.com/micromagicman/binary-info/wrapper"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,14 +16,12 @@ type Tattletale struct {
 	Tree *goquery.Document
 }
 
-func (tt *Tattletale) GetWindowsCommand(filePath string) string {
-	fileDir := filepath.Dir(filePath)
-	return "java -jar " + osUtils.BackendDir + osUtils.Sep + "tattletale1.2.0.jar " + fileDir + " " + osUtils.TemplateDir
+func (tt *Tattletale) GetWindowsCommand() string {
+	return "java"
 }
 
-func (tt *Tattletale) GetLinuxCommand(filePath string) string {
-	fileDir := filepath.Dir(filePath)
-	return "java -jar " + osUtils.BackendDir + osUtils.Sep + "tattletale1.2.0.jar " + fileDir + " " + osUtils.TemplateDir
+func (tt *Tattletale) GetLinuxCommand() string {
+	return "java"
 }
 
 func (tt *Tattletale) GetName() string {
@@ -31,23 +29,26 @@ func (tt *Tattletale) GetName() string {
 }
 
 func (tt *Tattletale) LoadFile(pathToExecutable string) bool {
+	arguments := []string{
+		"-jar",
+		osUtils.BackendDir + osUtils.Sep + "tattletale1.2.0.jar",
+		filepath.Dir(pathToExecutable),
+		osUtils.TemplateDir,
+	}
 	if !tt.WasExecuted() {
-		_, err := osUtils.Execute(pathToExecutable, tt)
-		if err != nil {
+		if _, err := osUtils.Execute(tt, arguments...); nil != err {
 			return false
 		}
 		tt.MarkAsExecuted()
 	}
-
 	jarHtmlReport := osUtils.TemplateDir + osUtils.Sep + "jar" + osUtils.Sep + filepath.Base(pathToExecutable) + ".html"
 	htmlReport, err := os.Open(jarHtmlReport)
-	if err != nil {
+	if nil != err {
 		return false
 	}
 	defer htmlReport.Close()
-
 	document, err := goquery.NewDocumentFromReader(htmlReport)
-	if err != nil {
+	if nil != err {
 		return false
 	}
 	tt.Tree = document
@@ -64,16 +65,14 @@ func (tt *Tattletale) Process(e executable.Executable) {
 func (tt *Tattletale) getManifest() executable.JarManifest {
 	manifestSelection := tt.findNodeWithText("td", "Manifest")
 	manifest := executable.JarManifest{}
-	if manifestSelection == nil {
+	if nil == manifestSelection {
 		return manifest
 	}
-
 	manifestNode := manifestSelection.Next()
 	manifestHtml, err := manifestNode.Html()
-	if err != nil {
+	if nil != err {
 		return manifest
 	}
-
 	manifestParameters := strings.Split(manifestHtml, "<br/>")
 	var buffer, prevKey string
 	for _, mp := range manifestParameters {
@@ -88,26 +87,22 @@ func (tt *Tattletale) getManifest() executable.JarManifest {
 			prevKey = keyValuePair[0]
 			manifest[keyValuePair[0]] = keyValuePair[1]
 		}
-
 		if "" != prevKey {
 			manifest[prevKey] += buffer
 			buffer = ""
 		}
 	}
-
 	return manifest
 }
 
 func (tt *Tattletale) getImports() []string {
 	requiresSelection := tt.findNodeWithText("td", "Requires")
-	if requiresSelection == nil {
+	if nil == requiresSelection {
 		return []string{}
 	}
-
 	requiresNode := requiresSelection.Next()
 	requiresHtml, err := requiresNode.Html()
-
-	if err != nil {
+	if nil != err {
 		return []string{}
 	}
 	return strings.Split(requiresHtml, "<br/>")
@@ -115,7 +110,7 @@ func (tt *Tattletale) getImports() []string {
 
 func (tt *Tattletale) getExports() []string {
 	providesSelection := tt.findNodeWithText("td", "Provides")
-	if providesSelection == nil {
+	if nil == providesSelection {
 		return []string{}
 	}
 	return providesSelection.Next().
@@ -127,16 +122,14 @@ func (tt *Tattletale) getExports() []string {
 
 func (tt *Tattletale) findNodeWithText(nodeName string, text string) *goquery.Selection {
 	nodes := tt.Tree.Find(nodeName)
-	if nodes == nil {
+	if nil == nodes {
 		return nil
 	}
-
 	matches := nodes.FilterFunction(func(_ int, s *goquery.Selection) bool {
 		return text == s.Text()
 	})
-	if matches.Size() == 0 {
+	if 0 == matches.Size() {
 		return nil
 	}
-
 	return matches.Eq(0)
 }

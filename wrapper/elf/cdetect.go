@@ -1,21 +1,21 @@
 package elf
 
 import (
-	"binfo/executable"
-	"binfo/os"
-	"binfo/util"
+	"github.com/micromagicman/binary-info/executable"
+	"github.com/micromagicman/binary-info/os"
+	"github.com/micromagicman/binary-info/util"
 )
 
 type CDetect struct {
 	Compiler string
 }
 
-func (cd *CDetect) GetWindowsCommand(filePath string) string {
-	return "call " + os.BackendDir + os.Sep + "cdetect.exe " + filePath
+func (cd *CDetect) GetWindowsCommand() string {
+	return "call " + os.BackendDir + os.Sep + "cdetect.exe"
 }
 
-func (cd *CDetect) GetLinuxCommand(filePath string) string {
-	return os.BackendDir + os.Sep + "cdetect " + filePath
+func (cd *CDetect) GetLinuxCommand() string {
+	return os.BackendDir + os.Sep + "cdetect"
 }
 
 func (cd *CDetect) GetName() string {
@@ -23,8 +23,8 @@ func (cd *CDetect) GetName() string {
 }
 
 func (cd *CDetect) LoadFile(pathToExecutable string) bool {
-	stdOut, err := os.Execute(pathToExecutable, cd)
-	if err != nil {
+	stdOut, err := os.Execute(cd, pathToExecutable)
+	if nil != err {
 		return false
 	}
 	cd.Compiler = string(stdOut)

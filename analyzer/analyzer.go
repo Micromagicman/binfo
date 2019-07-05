@@ -1,11 +1,11 @@
 package analyzer
 
 import (
-	"binfo/executable"
-	osUtils "binfo/os"
-	"binfo/util"
-	"binfo/wrapper"
 	"fmt"
+	"github.com/micromagicman/binary-info/executable"
+	osUtils "github.com/micromagicman/binary-info/os"
+	"github.com/micromagicman/binary-info/util"
+	"github.com/micromagicman/binary-info/wrapper"
 	"io/ioutil"
 	"log"
 )

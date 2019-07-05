@@ -1,10 +1,10 @@
 package executable
 
 import (
-	"binfo/util"
 	"github.com/beevik/etree"
 	"github.com/fatih/set"
 	pe2 "github.com/mewrev/pe"
+	"github.com/micromagicman/binary-info/util"
 )
 
 type PortableExecutable struct {

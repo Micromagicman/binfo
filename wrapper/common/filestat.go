@@ -1,7 +1,7 @@
 package common
 
 import (
-	"binfo/executable"
+	"github.com/micromagicman/binary-info/executable"
 	"os"
 	"path/filepath"
 )
@@ -17,11 +17,11 @@ func (fs *FileStat) GetName() string {
 
 func (fs *FileStat) LoadFile(pathToExecutable string) bool {
 	file, err := os.Open(pathToExecutable)
-	if err != nil {
+	if nil != err {
 		return false
 	}
 	info, err := file.Stat()
-	if err != nil {
+	if nil != err {
 		return false
 	}
 	fs.Filename, _ = filepath.Abs(pathToExecutable)

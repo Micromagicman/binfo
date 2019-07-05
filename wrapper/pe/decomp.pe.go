@@ -1,9 +1,9 @@
 package pe
 
 import (
-	"binfo/executable"
 	"github.com/decomp/exp/bin"
 	"github.com/decomp/exp/bin/pe"
+	"github.com/micromagicman/binary-info/executable"
 )
 
 type DecompPE struct {

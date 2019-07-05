@@ -1,9 +1,9 @@
 package os
 
 import (
-	"binfo/executable"
-	"binfo/util"
-	"binfo/xml"
+	"github.com/micromagicman/binary-info/executable"
+	"github.com/micromagicman/binary-info/util"
+	"github.com/micromagicman/binary-info/xml"
 	"os"
 	"path/filepath"
 )
@@ -33,6 +33,7 @@ func DeleteTemplateDirectory() {
 	util.LogIfError(err, "Error removing template directory")
 }
 
-func SaveResult(bin executable.Executable, outputDirectory string, path string) {
-	xml.BuildXml(bin, outputDirectory+Sep+filepath.Base(path)+".xml")
+func SaveResult(bin executable.Executable, outputPath string) {
+	_ = util.CreateDirectory(filepath.Dir(outputPath))
+	xml.BuildXml(bin, outputPath)
 }

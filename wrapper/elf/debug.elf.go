@@ -1,9 +1,9 @@
 package elf
 
 import (
-	"binfo/executable"
 	"debug/elf"
 	"github.com/fatih/set"
+	"github.com/micromagicman/binary-info/executable"
 )
 
 type DebugElf struct {
@@ -16,7 +16,7 @@ func (de *DebugElf) GetName() string {
 
 func (de *DebugElf) LoadFile(executablePath string) bool {
 	file, err := elf.Open(executablePath)
-	if err != nil {
+	if nil != err {
 		return false
 	}
 	de.File = file
@@ -30,13 +30,13 @@ func (de *DebugElf) Process(e executable.Executable) {
 	}
 	elfFile.Libraries = set.New(set.NonThreadSafe)
 	libraries, err := de.File.ImportedLibraries()
-	if err == nil {
+	if nil == err {
 		for _, l := range libraries {
 			elfFile.Libraries.Add(l)
 		}
 	}
 	symbols, err := de.File.ImportedSymbols()
-	if err == nil {
+	if nil == err {
 		imports := make([]executable.Function, len(symbols))
 		for i, s := range symbols {
 			elfFile.Libraries.Add(s.Library)

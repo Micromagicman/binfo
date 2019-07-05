@@ -1,8 +1,8 @@
 package analyzer
 
 import (
-	"binfo/executable"
 	"encoding/hex"
+	"github.com/micromagicman/binary-info/executable"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -70,7 +70,7 @@ func CreateDetector(pathToDatabase string) *PECompilerDetector {
 
 func createByteSignature(stringSignature string) []interface{} {
 	arrayOfBytes := strings.Split(stringSignature, " ")
-	bytes := []interface{}{}
+	var bytes []interface{}
 	for _, b := range arrayOfBytes {
 		if "??" == b {
 			bytes = append(bytes, "??")
@@ -88,7 +88,7 @@ func parseSignatures(pathToDatabase string) [][]string {
 		return [][]string{}
 	}
 	fileContent := string(fileBytes)
-	regex := regexp.MustCompile("\\[(.*?)\\]\\s+?signature\\s*=\\s*(.*?)(\\s+\\?\\?)*\\s*ep_only\\s*=\\s*(\\w+)(?:\\s*section_start_only\\s*=\\s*(\\w+)|)")
+	regex := regexp.MustCompile(`\[(.*?)\]\s+?signature\s*=\s*(.*?)(\s+\?\?)*\s*ep_only\s*=\s*(\w+)(?:\s*section_start_only\s*=\s*(\w+)|)`)
 	return regex.FindAllStringSubmatch(fileContent, -1)
 }
 

@@ -1,7 +1,7 @@
 package wrapper
 
 import (
-	"binfo/executable"
+	"github.com/micromagicman/binary-info/executable"
 	"regexp"
 )
 

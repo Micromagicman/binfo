@@ -1,11 +1,9 @@
 /.idea/
-/backend/
+/binfo-backend/
 /pkg/
 /out/
 /temp/
 /binaries/
-
-/src/github.com/
 
 *.xml
 

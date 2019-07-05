@@ -1,9 +1,9 @@
 package pe
 
 import (
-	"binfo/executable"
-	"binfo/util"
 	"github.com/mewrev/pe"
+	"github.com/micromagicman/binary-info/executable"
+	"github.com/micromagicman/binary-info/util"
 )
 
 type MemrevPE struct {
@@ -16,7 +16,7 @@ func (mpe *MemrevPE) GetName() string {
 
 func (mpe *MemrevPE) LoadFile(pathToExecutable string) bool {
 	file, err := pe.Open(pathToExecutable)
-	if err != nil {
+	if nil != err {
 		return false
 	}
 	mpe.File = file

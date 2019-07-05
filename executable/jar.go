@@ -1,7 +1,7 @@
 package executable
 
 import (
-	"binfo/util"
+	"github.com/micromagicman/binary-info/util"
 	"strings"
 
 	"github.com/beevik/etree"
@@ -36,7 +36,7 @@ func (jar *JarExecutable) GetMagic() string {
 func (jar *JarExecutable) CreateManifest() *etree.Element {
 	manifestNode := etree.NewElement("Manifest")
 	for key, value := range jar.Manifest {
-		xmlKey := strings.ReplaceAll(key, "-", "")
+		xmlKey := strings.Replace(key, "-", "", -1)
 		manifestNode.AddChild(util.BuildNodeWithText(xmlKey, value))
 	}
 	return manifestNode

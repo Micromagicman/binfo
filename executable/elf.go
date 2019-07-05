@@ -1,9 +1,9 @@
 package executable
 
 import (
-	"binfo/util"
 	"github.com/beevik/etree"
 	"github.com/fatih/set"
+	"github.com/micromagicman/binary-info/util"
 )
 
 const (

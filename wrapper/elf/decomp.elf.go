@@ -1,9 +1,9 @@
 package elf
 
 import (
-	"binfo/executable"
 	"github.com/decomp/exp/bin"
 	"github.com/decomp/exp/bin/elf"
+	"github.com/micromagicman/binary-info/executable"
 )
 
 type DecompELF struct {
@@ -16,7 +16,7 @@ func (de *DecompELF) GetName() string {
 
 func (de *DecompELF) LoadFile(pathToExecutable string) bool {
 	elfFile, err := elf.ParseFile(pathToExecutable)
-	if err != nil {
+	if nil != err {
 		return false
 	}
 	de.ElfFile = elfFile

@@ -1,11 +1,11 @@
 package analyzer
 
 import (
-	"binfo/wrapper"
-	"binfo/wrapper/common"
-	"binfo/wrapper/elf"
-	"binfo/wrapper/jar"
-	"binfo/wrapper/pe"
+	"github.com/micromagicman/binary-info/wrapper"
+	"github.com/micromagicman/binary-info/wrapper/common"
+	"github.com/micromagicman/binary-info/wrapper/elf"
+	"github.com/micromagicman/binary-info/wrapper/jar"
+	"github.com/micromagicman/binary-info/wrapper/pe"
 )
 
 type UtilitiesContainer struct {

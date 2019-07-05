@@ -1,11 +1,10 @@
 package pe
 
 import (
-	"binfo/executable"
-	"binfo/os"
-	"binfo/wrapper"
-	"fmt"
 	"github.com/decomp/exp/bin"
+	"github.com/micromagicman/binary-info/executable"
+	"github.com/micromagicman/binary-info/os"
+	"github.com/micromagicman/binary-info/wrapper"
 	"strconv"
 	"strings"
 )
@@ -14,13 +13,12 @@ type ObjDump struct {
 	wrapper.BaseDump
 }
 
-func (od *ObjDump) GetWindowsCommand(filePath string) string {
-	fmt.Println("call " + os.BackendDir + os.Sep + "objdump.exe " + filePath + " -x")
-	return "call " + os.BackendDir + os.Sep + "objdump.exe " + filePath + " -x"
+func (od *ObjDump) GetWindowsCommand() string {
+	return "call " + os.BackendDir + os.Sep + "objdump.exe"
 }
 
-func (od *ObjDump) GetLinuxCommand(filePath string) string {
-	return os.BackendDir + os.Sep + "objdump " + filePath + " -x"
+func (od *ObjDump) GetLinuxCommand() string {
+	return os.BackendDir + os.Sep + "objdump"
 }
 
 func (od *ObjDump) GetName() string {
@@ -28,7 +26,7 @@ func (od *ObjDump) GetName() string {
 }
 
 func (od *ObjDump) LoadFile(pathToExecutable string) bool {
-	stdOut, err := os.Execute(pathToExecutable, od)
+	stdOut, err := os.Execute(od, []string{pathToExecutable, "-x"}...)
 	if err != nil {
 		return false
 	}
@@ -52,14 +50,11 @@ func (od *ObjDump) getFlags() []executable.Flag {
 	if len(flagsMatch) == 0 {
 		return []executable.Flag{}
 	}
-
 	flagStrings := strings.Split(wrapper.Group(flagsMatch[0], 1), ", ")
 	flags := make([]executable.Flag, len(flagStrings))
-
 	for index, element := range flagStrings {
 		flags[index] = executable.Flag{Name: element}
 	}
-
 	return flags
 }
 
@@ -82,13 +77,12 @@ func (od *ObjDump) getExports() map[bin.Address]string {
 	for _, em := range namesMatch {
 		names[wrapper.Group(em, 1)] = wrapper.Group(em, 2)
 	}
-
 	for k, v := range addresses {
 		if name, ok := names[k]; ok {
 			address, _ := strconv.ParseInt(v, 16, 64)
 			exports[bin.Address(address)] = name
 		}
 	}
-
+	
 	return exports
 }

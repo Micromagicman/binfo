@@ -1,21 +1,21 @@
 package elf
 
 import (
-	"binfo/executable"
-	"binfo/os"
-	"binfo/wrapper"
+	"github.com/micromagicman/binary-info/executable"
+	"github.com/micromagicman/binary-info/os"
+	"github.com/micromagicman/binary-info/wrapper"
 )
 
 type ELFReaderUtil struct {
 	wrapper.BaseDump
 }
 
-func (eru *ELFReaderUtil) GetWindowsCommand(filePath string) string {
-	return "call " + os.BackendDir + os.Sep + "elfreader.exe " + filePath
+func (eru *ELFReaderUtil) GetWindowsCommand() string {
+	return "call " + os.BackendDir + os.Sep + "elfreader.exe"
 }
 
-func (eru *ELFReaderUtil) GetLinuxCommand(filePath string) string {
-	return os.BackendDir + os.Sep + "elfreader " + filePath
+func (eru *ELFReaderUtil) GetLinuxCommand() string {
+	return os.BackendDir + os.Sep + "elfreader"
 }
 
 func (eru *ELFReaderUtil) GetName() string {
@@ -23,8 +23,8 @@ func (eru *ELFReaderUtil) GetName() string {
 }
 
 func (eru *ELFReaderUtil) LoadFile(pathToExecutable string) bool {
-	stdOut, err := os.Execute(pathToExecutable, eru)
-	if err != nil {
+	stdOut, err := os.Execute(eru, pathToExecutable)
+	if nil != err {
 		return false
 	}
 	eru.Content = string(stdOut)

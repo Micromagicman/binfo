@@ -1,9 +1,9 @@
 package pe
 
 import (
-	"binfo/executable"
-	"binfo/util"
 	"github.com/H5eye/go-pefile"
+	"github.com/micromagicman/binary-info/executable"
+	"github.com/micromagicman/binary-info/util"
 )
 
 type PEFile struct {
@@ -16,7 +16,7 @@ func (pf *PEFile) GetName() string {
 
 func (pf *PEFile) LoadFile(pathToExecutable string) bool {
 	peLoad, err := pefile.Load(pathToExecutable)
-	if err != nil {
+	if nil != err {
 		return false
 	}
 	pf.PEFile = peLoad
