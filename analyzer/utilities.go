@@ -8,13 +8,6 @@ import (
 	"github.com/micromagicman/binary-info/wrapper/pe"
 )
 
-type UtilitiesContainer struct {
-	Common []wrapper.LibraryWrapper
-	PE []wrapper.LibraryWrapper
-	ELF []wrapper.LibraryWrapper
-	JAR []wrapper.LibraryWrapper
-}
-
 func BuildUtilitiesContainer() *UtilitiesContainer {
 	container := new(UtilitiesContainer)
 	// Общие утилиты

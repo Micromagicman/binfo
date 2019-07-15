@@ -5,8 +5,20 @@
 
 ## Запуск
 
+### Cli
+```go
+go run cli/main.go -b=<directory with executables> -o=<output directory>
 ```
-go run main.go -b=<directory with executables> -o=<output directory>
+
+### Module
+```go
+import "github.com/micromagicman/binary-info/binfo"
+
+func main() {
+	binaries := "/some/binaries/dir"
+	out := "/some/out/dir"
+	binfo.ProcessFiles(binaries, out)
+}
 ```
 
 ### Флаги

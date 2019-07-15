@@ -1,79 +1,71 @@
 package analyzer
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
 	"github.com/micromagicman/binary-info/executable"
 	osUtils "github.com/micromagicman/binary-info/os"
 	"github.com/micromagicman/binary-info/util"
 	"github.com/micromagicman/binary-info/wrapper"
 	"io/ioutil"
 	"log"
+	"path"
+	"path/filepath"
 )
-
-const (
-	TYPE_UNKNOWN = -1
-	TYPE_EXE     = 0
-
-	// PE
-	TYPE_DLL = 1
-	TYPE_OCX = 2
-	TYPE_SYS = 3
-	TYPE_SCR = 4
-	TYPE_DRV = 5
-	TYPE_CPL = 6
-	TYPE_EFI = 7
-	TYPE_LIB = 8
-
-	// ELF
-	TYPE_SO  = 10
-	TYPE_AXF = 11
-	TYPE_BIN = 12
-	TYPE_ELF = 13
-	TYPE_O   = 14
-	TYPE_A   = 15
-	TYPE_PRX = 16
-
-	TYPE_JAR = 20
-)
-
-type Analyzer struct {
-	CompilerDetector *PECompilerDetector
-	Utilities *UtilitiesContainer
-}
 
 func CreateAnalyzer() *Analyzer {
-	analyzer := new(Analyzer)
-	analyzer.Utilities = BuildUtilitiesContainer()
-	analyzer.CompilerDetector = CreateDetector(osUtils.BackendDir + osUtils.Sep + "compiler_signatures.txt")
-	return analyzer
+	return &Analyzer{
+		CreateCompilerDetector(path.Join(osUtils.BackendDir, "compiler_signatures.txt")),
+		BuildUtilitiesContainer(),
+	}
 }
 
-func (a *Analyzer) TryToAnalyze(unknownBinary string) (executable.Executable, error) {
+func (a *Analyzer) Analyze(binaryPath string) (executable.Executable, error) {
+	var binFile executable.Executable
+	var err error
+	log.Println("Processing " + binaryPath)
+	binaryType := detectBinaryType(binaryPath)
+	if binaryType != TYPE_UNKNOWN {
+		binFile, err = a.AnalyzeNormal(binaryPath, binaryType)
+	} else {
+		// попытка проанализировать файл без расширения
+		log.Println("Unknown executable type for file " + binaryPath)
+		binFile, err = a.AnalyzeUnknown(binaryPath)
+		if nil != err {
+			return nil, err
+		}
+	}
+	if nil != err {
+		return nil, err
+	} else {
+		return binFile, nil
+	}
+}
+
+func (a *Analyzer) AnalyzeUnknown(unknownBinary string) (executable.Executable, error) {
 	fileDump, err := ioutil.ReadFile(unknownBinary)
-	if err != nil {
+	if nil != err {
 		return nil, err
 	}
-
 	if hasELFSignature(fileDump) {
-		fmt.Println("Detect ELF signature")
+		log.Println("Detect ELF signature for " + unknownBinary)
 		return a.ProcessExecutableLinkable(unknownBinary)
-	} else if hasPESignature(fileDump) {
-		fmt.Println("Detect PE signature")
+	}
+	if hasPESignature(fileDump) {
+		log.Println("Detect PE signature for " + unknownBinary)
 		return a.ProcessPortableExecutable(unknownBinary)
-	} else if hasJarSignature(fileDump) {
-		fmt.Println("Detect ProcessJar signature")
+	}
+	if hasJarSignature(fileDump) {
+		log.Println("Detect jar signature for " + unknownBinary)
 		return a.ProcessJar(unknownBinary)
 	}
-
-	return nil, nil
+	return nil, errors.New("Unknown executable type for " + unknownBinary)
 }
 
-func (a *Analyzer) Analyze(pathToBinary string, binaryType int) (executable.Executable, error) {
+func (a *Analyzer) AnalyzeNormal(pathToBinary string, binaryType BinaryType) (executable.Executable, error) {
 	var file executable.Executable
 	var err error
-
 	if binaryType == TYPE_EXE {
-		file, err = a.TryToAnalyze(pathToBinary)
+		file, err = a.AnalyzeUnknown(pathToBinary)
 	} else if binaryType == TYPE_JAR {
 		file, err = a.ProcessJar(pathToBinary)
 	} else if isPortableExecutable(binaryType) {
@@ -81,11 +73,9 @@ func (a *Analyzer) Analyze(pathToBinary string, binaryType int) (executable.Exec
 	} else if isElf(binaryType) {
 		file, err = a.ProcessExecutableLinkable(pathToBinary)
 	}
-
-	if err != nil {
+	if nil != err {
 		return nil, err
 	}
-
 	return file, nil
 }
 
@@ -123,12 +113,23 @@ func applyUtilities(pathToExecutable string, e executable.Executable, utilities 
 	}
 }
 
-func isPortableExecutable(binaryType int) bool {
+func isPortableExecutable(binaryType BinaryType) bool {
 	return binaryType >= TYPE_DLL && binaryType <= TYPE_LIB
 }
 
-func isElf(binaryType int) bool {
+func isElf(binaryType BinaryType) bool {
 	return binaryType >= TYPE_SO && binaryType <= TYPE_PRX
+}
+
+func detectBinaryType(binaryPath string) BinaryType {
+	extension := filepath.Ext(binaryPath)
+	if "" != extension {
+		extension = extension[1:]
+	}
+	if value, ok := extensions[extension]; ok {
+		return value
+	}
+	return TYPE_UNKNOWN
 }
 
 

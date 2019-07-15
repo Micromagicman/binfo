@@ -9,16 +9,6 @@ import (
 	"strings"
 )
 
-type PECompiler struct {
-	Signature []interface{}
-	EpOnly bool
-}
-
-type PECompilerDetector struct {
-	Compilers map[string]PECompiler
-}
-
-
 func (cd *PECompilerDetector) Detect(pathToExecutable string) string {
 	file, _ := os.Open(pathToExecutable)
 	maxMatchCount := 0
@@ -49,7 +39,7 @@ func (c *PECompiler) Match(file *os.File) int {
 	return matchCount
 }
 
-func CreateDetector(pathToDatabase string) *PECompilerDetector {
+func CreateCompilerDetector(pathToDatabase string) *PECompilerDetector {
 	signatures := parseSignatures(pathToDatabase)
 	detector := new(PECompilerDetector)
 	detector.Compilers = map[string]PECompiler{}
