@@ -3,6 +3,7 @@
 /pkg/
 /out/
 /temp/
+/bin/
 /binaries/
 
 *.xml

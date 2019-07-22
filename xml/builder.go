@@ -2,7 +2,7 @@ package xml
 
 import (
 	"github.com/micromagicman/binary-info/executable"
-	"log"
+	"github.com/micromagicman/binary-info/logger"
 	"os"
 
 	"github.com/beevik/etree"
@@ -15,6 +15,6 @@ func BuildXml(bin executable.Executable, outputFilename string) {
 	doc.Indent(4)
 	_, err := doc.WriteTo(file)
 	if nil != err {
-		log.Println("Error creating xml output for file " + outputFilename)
+		logger.Error("Error creating xml output for file " + outputFilename)
 	}
 }

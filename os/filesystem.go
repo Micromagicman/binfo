@@ -4,6 +4,7 @@ import (
 	"github.com/micromagicman/binary-info/executable"
 	"github.com/micromagicman/binary-info/util"
 	"github.com/micromagicman/binary-info/xml"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -31,6 +32,14 @@ func InitOutputDirectory(outDir string) {
 func DeleteTemplateDirectory() {
 	err := util.RemoveDirectory(TemplateDir)
 	util.LogIfError(err, "Error removing template directory")
+}
+
+func DeleteFiles(files... string) {
+	for _, f := range files {
+		if err := os.Remove(f); nil != err {
+			log.Println(err.Error())
+		}
+	}
 }
 
 func SaveResult(bin executable.Executable, outputPath string) {

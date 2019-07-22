@@ -19,6 +19,7 @@ type JarExecutable struct {
 	Provides        []string
 	Manifest        JarManifest
 	JarAnalyzerTree *etree.Element
+	Children        []*JarExecutable
 }
 
 func (jar *JarExecutable) GetType() string {
@@ -60,6 +61,14 @@ func (jar *JarExecutable) BuildXml(doc *etree.Document) *etree.Element {
 			requiresNode.AddChild(util.BuildNodeWithText("Class", r))
 		}
 	}
+
+	if len(jar.Children) > 0 {
+		innerJarsNode := root.CreateElement("InnerJars")
+		for _, jc := range jar.Children {
+			childDocument := etree.NewDocument()
+			innerJarsNode.AddChild(jc.BuildXml(childDocument))
+		}
+ 	}
 
 	if len(jar.Provides) > 0 {
 		requiresNode := root.CreateElement("Exports")

@@ -28,7 +28,7 @@ const (
 	TYPE_JAR
 )
 
-var extensions = map[string]BinaryType {
+var extensions = map[string]BinaryType{
 	"dll": TYPE_DLL,
 	"ocx": TYPE_OCX,
 	"sys": TYPE_SYS,
@@ -37,24 +37,24 @@ var extensions = map[string]BinaryType {
 	"cpl": TYPE_CPL,
 	"efi": TYPE_EFI,
 	"lib": TYPE_LIB,
-	"so": TYPE_SO,
+	"so":  TYPE_SO,
 	"axf": TYPE_AXF,
 	"bin": TYPE_BIN,
 	"elf": TYPE_ELF,
-	"o": TYPE_O,
-	"a": TYPE_A,
+	"o":   TYPE_O,
+	"a":   TYPE_A,
 	"prx": TYPE_PRX,
 	"jar": TYPE_JAR,
 }
 
 type Analyzer struct {
 	CompilerDetector *PECompilerDetector
-	Utilities *UtilitiesContainer
+	Utilities        *UtilitiesContainer
 }
 
 type PECompiler struct {
 	Signature []interface{}
-	EpOnly bool
+	EpOnly    bool
 }
 
 type PECompilerDetector struct {
@@ -63,7 +63,7 @@ type PECompilerDetector struct {
 
 type UtilitiesContainer struct {
 	Common []wrapper.LibraryWrapper
-	PE []wrapper.LibraryWrapper
-	ELF []wrapper.LibraryWrapper
-	JAR []wrapper.LibraryWrapper
+	PE     []wrapper.LibraryWrapper
+	ELF    []wrapper.LibraryWrapper
+	JAR    []wrapper.LibraryWrapper
 }

@@ -81,5 +81,3 @@ func parseSignatures(pathToDatabase string) [][]string {
 	regex := regexp.MustCompile(`\[(.*?)\]\s+?signature\s*=\s*(.*?)(\s+\?\?)*\s*ep_only\s*=\s*(\w+)(?:\s*section_start_only\s*=\s*(\w+)|)`)
 	return regex.FindAllStringSubmatch(fileContent, -1)
 }
-
-

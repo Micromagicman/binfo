@@ -11,7 +11,7 @@ import (
 func BuildUtilitiesContainer() *UtilitiesContainer {
 	container := new(UtilitiesContainer)
 	// Общие утилиты
-	container.Common = []wrapper.LibraryWrapper {
+	container.Common = []wrapper.LibraryWrapper{
 		new(common.FileStat),
 	}
 	// Библиотеки для PE

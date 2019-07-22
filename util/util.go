@@ -2,7 +2,10 @@ package util
 
 import (
 	"fmt"
+	"github.com/micromagicman/binary-info/logger"
+	"io"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -12,6 +15,7 @@ import (
 	"github.com/beevik/etree"
 )
 
+var hashString = "abcdef1234567890"
 var languageToCompiler = map[string][]string{
 	"Golang":  {"go", "golang"},
 	"C/C++":   {"gcc", "clang", "visual c++", "borland c++", "mingw"},
@@ -122,15 +126,26 @@ func GetDirectoryFilePaths(directoryPath string) []string {
 	if nil != err {
 		log.Fatal("Cannot read directory with binaries")
 	}
-	//for i, file := range files {
-	//	filePaths[i] = directoryPath + string(os.PathSeparator) + file.Name()
-	//}
 	return filePaths
+}
+
+func FileFirstBytes(filePath string, countOfBytes int64) ([]byte, error) {
+	file, err := os.Open(filePath)
+	if nil != err {
+		return nil, err
+	}
+	defer file.Close()
+	buffer := make([]byte, countOfBytes)
+	n, err := io.ReadFull(file, buffer)
+	if nil != err || int64(n) != countOfBytes {
+		return nil, err
+	}
+	return buffer, nil
 }
 
 func LogIfError(err error, message string) {
 	if err != nil {
-		log.Println(message + ": " + err.Error())
+		logger.Error(message + ": " + err.Error())
 	}
 }
 
@@ -164,4 +179,12 @@ func MapValues(m map[interface{}]interface{}) []interface{} {
 		values = append(values, v)
 	}
 	return values
+}
+
+func RandomHash(size int) []byte {
+	hash := make([]byte, size)
+	for i := range hash {
+		hash[i] = hashString[rand.Intn(len(hashString))]
+	}
+	return hash
 }
